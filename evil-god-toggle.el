@@ -51,10 +51,11 @@
 
   :group 'god-mode)
 
-
 (defcustom persist_visual nil
   "Determines whether to persist the visual selection when switching modes.
-When non-nil, the visual selection will persist."
+When non-nil, the visual selection will persist. If true it implies both
+persist_visual_to_evil and persist_visual_to_god.  These parameters are
+logically related to each other by 'or'"
   :type 'boolean
   :group 'god-mode)
 
@@ -191,26 +192,25 @@ When non-nil, the visual selection will persist."
 
 
 ;;;###autoload
-(defun move_before_insert (append cursor_strategy_used)
-  "Enter insert mode based on the value of `cursor_strategy'. "
+(defun cursor_toggle_motion (append)
+  "Enter insert mode based on the value of `insert-to-god-cursor-strategy'. "
   (cond
-   ((string-equal cursor_strategy "same")
+   ((string-equal insert-to-god-cursor-strategy "same")
     (unless append
       (backward-char)))
-   ((string-equal cursor_strategy "toggle")
+   ((string-equal insert-to-god-cursor-strategy "toggle")
     (if append
 	(backward-char)))
-   ((string-equal cursor_strategy "reverse")
-    ;; TODO: Implement "reverse" strategy
+   ((string-equal insert-to-god-cursor-strategy "reverse")
     )
    (t
     (backward-char))))
 
 ;;;###autoload
-(defun god-toggle (append in_god cursor_strategy_used)
+(defun god-toggle (append)
   (interactive)
   ;; in god local mode; switch to evil-insert and move cursor if append is true
-  (if in_god
+  (if god-local-mode
       (progn
 	(evil-echo "Switching out of evil-god-mode")
 	(evil-stop-execute-in-god-state t) ; going into insert mode; mapping escape to go to god mode
@@ -221,7 +221,7 @@ When non-nil, the visual selection will persist."
     (progn 
       (evil-echo "Switching into evil-god-mode")
       (unless (eq evil-state 'normal); don't move the cursor if we're in normal mode; entering god mode is like going into a different normal mode
-	(move_before_insert append cursor_strategy_used)	
+	(cursor_toggle_motion append)	
 	) ;; end unless
       (evil-execute-in-god-state )
       ) ;; end progn

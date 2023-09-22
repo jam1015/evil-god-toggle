@@ -38,7 +38,7 @@ It takes the argument `append`.
 
     - `default` (or any value different from the next three options): Same cursor motion as switching from Insert mode to Normal mode in Vim. The cursor is moved one space back.  Takes no dependence on the value of the argument `append`. Repeatedly calling `god-toggle` with `append` nil will move the cursor backwards each cycle.  Repeatedly calling `god toggle` with `append` non-nil will move the cursor forwards and backwards in the same two position.s
 
-     - `same`: If `append` is `nil` then the cursor remains in the same place. If `append` is non-`nil` then the cursor moves back one space. This means that repeatedtly 
+     - `same`: If `append` is `nil` then the cursor remains in the same place. If `append` is non-`nil` then the cursor moves back one space. This means that repeatedtly calling the 
 
 ### `evil-stop-execute-in-god-state` (which is also called by `god-toggle`).
 
