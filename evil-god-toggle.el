@@ -1,34 +1,36 @@
-;;; evil-god-toggle.el --- Toggle between Evil and God modes easily
+;;; evil-god-toggle.el --- Toggle between Evil and God Modes -*- lexical-binding: t -*-
+;; Copyright (C) 2023 Jordan Mandel
+;; Author: Jordan Mandel <jordan.mandel@live.com>
+;; Created: 2023 Summer
+;; Version: 0.1
+;; Keywords: evil god-mode
+;; URL: https://github.com/jam1015/evil-god-toggle
+;; Package-Requires: ((evil "1.0.8") (god-mode "2.12.0"))
 
-;; Copyright (C) 2023 Your Name
-;; Author: Your Name <jordan.mandel@live.com>
-;; URL: https://github.com/yourusername/evil-god-toggle
-;; Inspired by: evil-god-state (https://github.com/gridaphobe/evil-god-state)
-;; This is a heavily modified version of evil-god-state by gridaphobe.
-;; License: GNU General Public License version 3, or (at your option) any later version
+;; This file is not part of GNU Emacs.
+
+;; SPDX-License-Identifier: GPL-3.0-or-later
+
+;; This file is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
+
+;; This file is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program; see the file COPYING.  If not, write to
+;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
+
 
 ;;; Commentary:
 
 ;; The `evil-god-toggle` package allows seamless toggling between evil-mode and god-mode.
 ;; It is particularly useful for users who like both Vim and Emacs keybindings.
-;;
-;; Installation:
-;; MELPA: M-x package-install RET evil-god-toggle
-;; Manual: Clone this repo and add the following to your config:
-;; (add-to-list 'load-path "/path/to/evil-god-toggle")
-;; (require 'evil-god-toggle)
-;;
-;; Usage:
-;; Toggle to god-mode: C-;
-;; Toggle back to evil-mode: C-,
-;;
-;; Customization:
-;; You can customize entry strategy, visual selection persistence, and state cursors.
-;; Refer to README for more details.
-;;
-;; Best Practices:
-;; - Use this package if you're well-acquainted with both Vim and Emacs keybindings.
-;; - Customize the toggle keys to fit your workflow.
 
 ;;; Code:
 
@@ -41,11 +43,11 @@
 (defcustom god-entry-strategy "default"
   "Controls how the cursor moves when entering god-mode."
   :type '(choice 
-                 (const :tag "Same as Vim" "default")
-                 (const :tag "Stay in the same place" "same")
-                 (const :tag "Toggle position" "toggle")
-                 (const :tag "Reverse direction" "reverse")
-                  )
+	  (const :tag "Same as Vim" "default")
+	  (const :tag "Stay in the same place" "same")
+	  (const :tag "Toggle position" "toggle")
+	  (const :tag "Reverse direction" "reverse")
+	  )
 
   :group 'god-mode)
 
@@ -89,7 +91,7 @@ When non-nil, the visual selection will persist."
 	  (assq-delete-all 'god evil-previous-state-alist))
     (add-to-list 'evil-previous-state-alist (cons 'god 'normal))
     ;;(add-to-list 'evil-previous-state-alist (cons 'visual 'normal))
-	)
+    )
   )
 
 (add-hook 'evil-visual-state-entry-hook 'check-and-update-previous-state-visual)
@@ -122,6 +124,7 @@ When non-nil, the visual selection will persist."
 (defvar evil-god-last-command nil) ; command before entering evil-god-state
 (defvar ran-first-evil-command nil)
 
+;;;###autoload
 ( defun evil-god-fix-last-command ()
   "Change `last-command' to be the command before `evil-execute-in-god-state'."
   (unless ran-first-evil-command
@@ -155,7 +158,7 @@ When non-nil, the visual selection will persist."
   (interactive)
   "Switch back to previous evil state."
   (unless (or (eq this-command #'evil-execute-in-god-state)
-          (eq this-command #'universal-argument)
+	      (eq this-command #'universal-argument)
 	      (eq this-command #'universal-argument-minus)
 	      (eq this-command #'universal-argument-more)
 	      (eq this-command #'universal-argument-other-key)
@@ -186,27 +189,28 @@ When non-nil, the visual selection will persist."
     )
   )
 
-(defun move_before_insert (append)
-  "Enter god mode based on the value of `god_entry_strategy'.
-If APPEND is non-nil, the behavior may be affected."
+
+;;;###autoload
+(defun move_before_insert (append cursor_strategy_used)
+  "Enter insert mode based on the value of `cursor_strategy'. "
   (cond
-   ((string-equal god_entry_strategy "same")
+   ((string-equal cursor_strategy "same")
     (unless append
       (backward-char)))
-   ((string-equal god_entry_strategy "toggle")
+   ((string-equal cursor_strategy "toggle")
     (if append
 	(backward-char)))
-   ((string-equal god_entry_strategy "reverse")
+   ((string-equal cursor_strategy "reverse")
     ;; TODO: Implement "reverse" strategy
     )
    (t
     (backward-char))))
 
 ;;;###autoload
-(defun god-toggle (append)
+(defun god-toggle (append in_god cursor_strategy_used)
   (interactive)
   ;; in god local mode; switch to evil-insert and move cursor if append is true
-  (if god-local-mode 
+  (if in_god
       (progn
 	(evil-echo "Switching out of evil-god-mode")
 	(evil-stop-execute-in-god-state t) ; going into insert mode; mapping escape to go to god mode
@@ -217,7 +221,7 @@ If APPEND is non-nil, the behavior may be affected."
     (progn 
       (evil-echo "Switching into evil-god-mode")
       (unless (eq evil-state 'normal); don't move the cursor if we're in normal mode; entering god mode is like going into a different normal mode
-	(move_before_insert append)	
+	(move_before_insert append cursor_strategy_used)	
 	) ;; end unless
       (evil-execute-in-god-state )
       ) ;; end progn

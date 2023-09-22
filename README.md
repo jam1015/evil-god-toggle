@@ -9,7 +9,6 @@ A package to seamlessly toggle between
 
 ## Background
 
-This package was written as a form of procrastination. 
 
 After learning [Neo]vim fairly well, I wanted to give Emacs a shot; what attracts me is that it represents an old way of computer interaction, hearkening back to LISP machines, and emulation of a computer where all programs seamlessly interacted with each other using a shared user interface that integrates better than various GUI programs or clumsily piping text from one UNIX command to the next. 
 
