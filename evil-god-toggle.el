@@ -34,7 +34,7 @@
 ;;; Code:
 
 
-(defgroup god-mode nil
+(defgroup evil-god-toggle nil
   "Customization group for god-mode."
   :prefix "god-"
   :group 'convenience)
