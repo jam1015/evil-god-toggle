@@ -26,7 +26,6 @@
 ;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 ;; Boston, MA 02110-1301, USA.
 
-
 ;;; Commentary:
 
 ;; The `evil-god-toggle` package allows seamless toggling between evil-mode and god-mode.
@@ -35,7 +34,7 @@
 ;;; Code:
 
 
-(defgroup god-mode nil
+(defgroup evil-god-toggle nil
   "Customization group for god-mode."
   :prefix "god-"
   :group 'convenience)
@@ -49,7 +48,7 @@
 	  (const :tag "Reverse direction" "reverse")
 	  )
 
-  :group 'god-mode)
+  :group 'evil-god-toggle)
 
 (defcustom persist_visual nil
   "Determines whether to persist the visual selection when switching modes.
@@ -57,19 +56,19 @@ When non-nil, the visual selection will persist. If true it implies both
 persist_visual_to_evil and persist_visual_to_god.  These parameters are
 logically related to each other by 'or'"
   :type 'boolean
-  :group 'god-mode)
+  :group 'evil-god-toggle)
 
 (defcustom persist_visual_to_evil nil
   "Determines whether to persist the visual selection when switching to Evil mode.
 When non-nil, the visual selection will persist."
   :type 'boolean
-  :group 'god-mode)
+  :group 'evil-god-toggle)
 
 (defcustom persist_visual_to_god nil
   "Determines whether to persist the visual selection when switching to God mode.
 When non-nil, the visual selection will persist."
   :type 'boolean
-  :group 'god-mode)
+  :group 'evil-god-toggle)
 
 (require 'evil)
 (require 'god-mode)

@@ -11,7 +11,7 @@ Inspired by and a heavily modified version of
 
 Evil Mode provides very accurate Vim emulation in emacs.
 
-God mode (in my interpretation) introduces a kind of modal editing in Emacs where non-insertion text editing capabilities are executed without modifier keys, analogous to insert mode in Vim, and the Fundamental state of Emacs is analogous to Insert Mode.
+God mode modifies Emacs so that it operates as if the control key is being held down at all times, with further input strategies to emulate holding down other modifier keys. In my interpretation this is annalogous to normal mode in Vim, where all non-insertion capabilities of the editor are similarly available without holding down modifier keys. Under this interpretation, emacs Fundamental mode is like Insert Mode in Vim.
 
 I wanted a good way to switch between Evil and God Mode. Evil-God-State does this, making God Mode a mode contained withing Evil Mode, but switches back to Evil mode after one command.  This package makes the change to God-mode persistent, providing functions to toggle between evil-mode and god mode.
 
