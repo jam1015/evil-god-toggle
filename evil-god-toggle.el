@@ -52,7 +52,7 @@
 
 (defcustom persist_visual nil
   "Determines whether to persist the visual selection when switching modes.
-When non-nil, the visual selection will persist. If true it implies both
+When non-nil, the visual selection will persist. If non-nil it implies both
 persist_visual_to_evil and persist_visual_to_god.  These parameters are
 logically related to each other by 'or'"
   :type 'boolean
@@ -84,13 +84,13 @@ When non-nil, the visual selection will persist."
   :intercept-esc nil)
 
 ;; when entering visual state checks if previous state was god; if it was make the previous state be normal
+;; this madex `escape` function as expected
 (defun check-and-update-previous-state-visual ()
   (when (eq evil-previous-state 'god)
     (setq evil-previous-state 'normal)
     (setq evil-previous-state-alist
 	  (assq-delete-all 'god evil-previous-state-alist))
     (add-to-list 'evil-previous-state-alist (cons 'god 'normal))
-    ;;(add-to-list 'evil-previous-state-alist (cons 'visual 'normal))
     )
   )
 
@@ -99,6 +99,8 @@ When non-nil, the visual selection will persist."
 ;; we're getting rid of these hooks because we don't want to activate visual mode when we highlight text in god mode
 (defun evil-god-start-hook ()
   "Run before entering `evil-god-state'."
+
+  ;; don't want to enter visual mode when we select text
   (remove-hook 'activate-mark-hook 'evil-visual-activate-hook t) 
   (remove-hook 'deactivate-mark-hook 'evil-visual-deactivate-hook t)
 
@@ -108,16 +110,15 @@ When non-nil, the visual selection will persist."
 (defun evil-god-stop-hook ()
   "Run before exiting `evil-god-state'."
 
-  ;; For evil-visual-deactivate-hook
-  (unless (memq #'evil-visual-deactivate-hook (default-value 'deactivate-mark-hook))
-    (add-hook 'deactivate-mark-hook #'evil-visual-deactivate-hook nil t))
-
   ;; For evil-visual-activate-hook
-  (unless (memq #'evil-visual-activate-hook (default-value 'activate-mark-hook))
-    (add-hook 'activate-mark-hook #'evil-visual-activate-hook nil t))
+  (unless (memq #'evil-visual-activate-hook (local-value 'activate-mark-hook (current-buffer)))
+  (add-hook 'activate-mark-hook #'evil-visual-activate-hook nil t))
 
+  ;; For evil-visual-deactivate-hook
+  (unless (memq #'evil-visual-deactivate-hook (local-value 'deactivate-mark-hook (current-buffer)))
+  (add-hook 'deactivate-mark-hook #'evil-visual-deactivate-hook nil t))
 
-  (unless (or 'persist_visual 'persist_visual_to_god ) (deactivate-mark))
+  (unless (or persist_visual persist_visual_to_god ) (deactivate-mark))
   (god-local-mode -1)
   ) ; Restore the keymap
 
