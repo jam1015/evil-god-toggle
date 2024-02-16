@@ -39,7 +39,7 @@
   :prefix "god-"
   :group 'convenience)
 
-(defcustom god-entry-strategy "default"
+(defcustom insert-to-god-cursor-strategy "default"
   "Controls how the cursor moves when entering god-mode."
   :type '(choice 
 	  (const :tag "Same as Vim" "default")
