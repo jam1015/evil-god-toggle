@@ -155,44 +155,36 @@ When non-nil, the visual selection will persist."
 
 ;;;###autoload
 (defun evil-stop-execute-in-god-state (to_insert)
-  (interactive)
-  "Switch back to previous evil state."
-  (unless (or (eq this-command #'evil-execute-in-god-state)
-	      (eq this-command #'universal-argument)
-	      (eq this-command #'universal-argument-minus)
-	      (eq this-command #'universal-argument-more)
-	      (eq this-command #'universal-argument-other-key)
-	      (eq this-command #'digit-argument)
-	      (eq this-command #'negative-argument)
-	      (minibufferp))
-    (remove-hook 'pre-command-hook 'evil-god-fix-last-command)
-    (cond 
-			;; go to insert mode
-     (to_insert (evil-insert-state 1))
+	(interactive)
+	"Switch back to previous evil state."
 
-		 ;; preserve visual mode
-     ((and mark-active (or 'persist_visual 'persist_visual_to_evil) ) 
+	(remove-hook 'pre-command-hook 'evil-god-fix-last-command)
+	(cond 
+		;; go to insert mode
+		(to_insert (evil-insert-state 1))
 
-      (unless (memq #'evil-visual-deactivate-hook (default-value 'deactivate-mark-hook))
-	(add-hook 'deactivate-mark-hook #'evil-visual-deactivate-hook nil t))
+		;; preserve visual mode
+		((and mark-active (or 'persist_visual 'persist_visual_to_evil) ) 
 
-      ;; For evil-visual-activate-hook
-      (unless (memq #'evil-visual-activate-hook (default-value 'activate-mark-hook))
-	(add-hook 'activate-mark-hook #'evil-visual-activate-hook nil t))
+		 (unless (memq #'evil-visual-deactivate-hook (default-value 'deactivate-mark-hook))
+			 (add-hook 'deactivate-mark-hook #'evil-visual-deactivate-hook nil t))
 
-      (force-mode-line-update)
-      (evil-visual-state)
-      (force-mode-line-update)
-      )
+		 ;; For evil-visual-activate-hook
+		 (unless (memq #'evil-visual-activate-hook (default-value 'activate-mark-hook))
+			 (add-hook 'activate-mark-hook #'evil-visual-activate-hook nil t))
 
-		 ;; go to normal state
-     (t 
-      (message "going to normal")
-      ( evil-normal-state )
-      )
-     )
-    )
-  )
+		 (force-mode-line-update)
+		 (evil-visual-state)
+		 (force-mode-line-update)
+		 )
+
+		;; go to normal state
+		(t 
+			( evil-normal-state )
+			)
+		)
+
+	)
 
 
 ;;;###autoload
@@ -201,14 +193,12 @@ When non-nil, the visual selection will persist."
   ;; in god local mode; switch to evil-insert and move cursor if append is true
   (if god-local-mode
       (progn
-	(evil-echo "Switching out of evil-god-mode")
 	(evil-stop-execute-in-god-state t) ; going into insert mode; mapping escape to go to god mode
 	(
 	 if append (forward-char)); like pressing 'a' in normal mode in vim, otherwise it's like you've pressed 'i'
 	)
     ;; not in god-local-mode,  move the cursor based on user preference and then go into god-state
     (progn 
-      (evil-echo "Switching into evil-god-mode")
     ;don't move the cursor if we're in normal mode; entering god mode is like going into a different normal mode
       (unless (eq evil-state 'normal)
 	(cursor_toggle_motion append)	
@@ -262,7 +252,7 @@ When non-nil, the visual selection will persist."
 
 ;; Assuming `evil-god-state-map` is the keymap for your custom God state,
 ;; you can bind C-z to switch to Evil Emacs state like this:
-(define-key evil-god-state-map (kbd "C-z") 'switch-to-evil-emacs-state)
+;; (define-key evil-god-state-map (kbd "C-z") 'switch-to-evil-emacs-state)
 
 ;; If the above doesn't work because `evil-god-state-map` isn't defined or
 ;; you want to ensure it works directly within God mode regardless of Evil's state,
