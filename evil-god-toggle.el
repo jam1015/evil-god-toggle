@@ -33,222 +33,195 @@
 
 ;;; Code:
 
-
 (defgroup evil-god-toggle nil
-  "Customization group for god-mode."
-  :prefix "god-"
-  :group 'convenience)
+					"Customization group for god-mode."
+					:prefix "god-"
+					:group 'convenience)
 
 (defcustom insert-to-god-cursor-strategy "default"
-  "Controls how the cursor moves when entering god-mode."
-  :type '(choice 
-	  (const :tag "Same as Vim" "default")
-	  (const :tag "Stay in the same place" "same")
-	  (const :tag "Toggle position" "toggle")
-	  (const :tag "Reverse direction" "reverse")
-	  )
-  :group 'evil-god-toggle)
+					 "Controls how the cursor moves when entering god-mode."
+					 :type '(choice 
+										(const :tag "Same as Vim" "default")
+										(const :tag "Stay in the same place" "same")
+										(const :tag "Toggle position" "toggle")
+										(const :tag "Reverse direction" "reverse")
+										)
+					 :group 'evil-god-toggle)
 
 (defcustom persist_visual nil
-  "Determines whether to persist the visual selection when switching modes.
-When non-nil, the visual selection will persist. If non-nil it implies both
-persist_visual_to_evil and persist_visual_to_god.  These parameters are
-logically related to each other by 'or'"
-  :type 'boolean
-  :group 'evil-god-toggle)
-
-(defcustom persist_visual_to_evil nil
-  "Determines whether to persist the visual selection (active region) when switching to Evil mode.
-When non-nil, the visual selection will persist."
-  :type 'boolean
-  :group 'evil-god-toggle)
-
-(defcustom persist_visual_to_god nil
-  "Determines whether to persist the visual selection when switching to God mode.
-When non-nil, the visual selection will persist."
-  :type 'boolean
-  :group 'evil-god-toggle)
+					 "Determines whether to persist the visual selection when switching modes.
+					 When non-nil, the visual selection will persist. If non-nil it implies both
+					 persist_visual_to_evil and persist_visual_to_god.  These parameters are
+					 logically related to each other by 'or'"
+					 :type 'boolean
+					 :group 'evil-god-toggle)
 
 (require 'evil)
 (require 'god-mode)
 
-
 (evil-define-state god
-  "God state."
-  :tag " <G> "
-  :message "-- GOD MODE --"
-  :entry-hook (evil-god-start-hook)
-  :exit-hook (evil-god-stop-hook)
-  ;;:input-method t  ;;the author of this plugin is not sure whether to leave this enabled or disabled or commented
-  :intercept-esc nil)
+									 "God state."
+									 :tag " <G> "
+									 :message "-- GOD MODE --"
+									 :entry-hook (evil-god-start-hook-fun)
+									 :exit-hook (evil-god-stop-hook-fun)
+									 :intercept-esc nil)
 
 ;; when entering visual state checks if previous state was god; if it was make the previous state be normal
-;; this madex `escape` function as expected
+;; this makes `escape` behave as expected
 (defun check-and-update-previous-state-visual ()
-  (when (eq evil-previous-state 'god)
-    (setq evil-previous-state 'normal)
-    (setq evil-previous-state-alist
-	  (assq-delete-all 'god evil-previous-state-alist))
-    (add-to-list 'evil-previous-state-alist (cons 'god 'normal))
-    )
-  )
+	(when (eq evil-previous-state 'god)
+		(setq evil-previous-state 'normal)
+		(setq evil-previous-state-alist
+					(assq-delete-all 'god evil-previous-state-alist))
+		(add-to-list 'evil-previous-state-alist (cons 'god 'normal))))
 
 (add-hook 'evil-visual-state-entry-hook 'check-and-update-previous-state-visual)
 
-;; we're getting rid of these hooks because we don't want to activate visual mode when we highlight text in god mode
-(defun evil-god-start-hook ()
-  "Run before entering `evil-god-state'."
+;; hook for starting god mode
+(defun evil-god-start-hook-fun ()
+	"Run before entering `evil-god-state'."
 
-  ;; don't want to enter visual mode when we select text
-  (remove-hook 'activate-mark-hook 'evil-visual-activate-hook t) 
-  (remove-hook 'deactivate-mark-hook 'evil-visual-deactivate-hook t)
+	;; this function removes hooks because we don't want to activate visual mode when we highlight text in god mode
+	(remove-hook 'activate-mark-hook 'evil-visual-activate-hook t) 
+	(remove-hook 'deactivate-mark-hook 'evil-visual-deactivate-hook t)
 
-  (god-local-mode 1))
+	(god-local-mode 1)
+	)
 
 ;; putting the visual state hooks back and runing them if necessary
-(defun evil-god-stop-hook ()
-  "Run before exiting `evil-god-state'."
+(defun evil-god-stop-hook-fun ()
+	"Run before exiting `evil-god-state'."
 
-  ;; For evil-visual-activate-hook
-  (unless (memq #'evil-visual-activate-hook (buffer-local-value 'activate-mark-hook (current-buffer)))
-    (add-hook 'activate-mark-hook #'evil-visual-activate-hook nil t))
+	;; For evil-visual-activate-hook
+	(unless (memq #'evil-visual-activate-hook (buffer-local-value 'activate-mark-hook (current-buffer)))
+		(add-hook 'activate-mark-hook #'evil-visual-activate-hook nil t))
 
-  ;; For evil-visual-deactivate-hook
-  (unless (memq #'evil-visual-deactivate-hook (buffer-local-value 'deactivate-mark-hook (current-buffer)))
-    (add-hook 'deactivate-mark-hook #'evil-visual-deactivate-hook nil t))
+	;; For evil-visual-deactivate-hook
+	(unless (memq #'evil-visual-deactivate-hook (buffer-local-value 'deactivate-mark-hook (current-buffer)))
+		(add-hook 'deactivate-mark-hook #'evil-visual-deactivate-hook nil t))
 
-  (unless (or persist_visual persist_visual_to_god ) (deactivate-mark))
-  (god-local-mode -1)
-  ) ; Restore the keymap
+	;;(unless  persist_visual  (deactivate-mark))
+	(god-local-mode -1)
+	) ; Restore the keymap
 
 (defvar evil-god-last-command nil) ; command before entering evil-god-state
 (defvar ran-first-evil-command nil)
 
-;;;###autoload
-( defun evil-god-fix-last-command ()
-  "Change `last-command' to be the command before `evil-execute-in-god-state'."
-  (unless ran-first-evil-command
-    (setq last-command evil-god-last-command)
-    (setq ran-first-evil-command t)
-    (remove-hook 'pre-command-hook 'evil-god-fix-last-command))
-  )
+(defun god-toggle (append)
+
+	(cond ((eq evil-state 'god)(cond
+															 ((and mark-active  persist_visual) (  evil-stop-execute-in-god-state "visual" )(guarded-backward-char))
+															 (t                                          (evil-stop-execute-in-god-state "insert")    (when append (guarded-forward-char))    )
+															 ))
+				((eq evil-state 'normal) (evil-execute-in-god-state))
+				((eq evil-state 'insert)(cursor_toggle_motion_insert_to_god append)(evil-execute-in-god-state))
+				((eq evil-state 'visual)(evil-execute-in-god-state))
+				(t (evil-execute-in-god-state))
+				)
+
+	)
 
 ;;;###autoload
 (defun evil-execute-in-god-state ()
-  "Go into god state, as if it is normal mode"
-  (interactive)
-  (setq ran-first-evil-command nil)
-  (add-hook 'pre-command-hook  #'evil-god-fix-last-command t) ; (setq last-command evil-god-last-command))
-  (setq evil-execute-in-god-state-buffer (current-buffer))
-  (setq evil-god-last-command last-command)
-  (cond
-   ((and (evil-visual-state-p) (or 'persist_visual 'persist_visual_to_god) )
-    ( let ((mrk (mark))
-	   (pnt (point)))
-      (evil-god-state 1)
-      (set-mark mrk)
-      (goto-char pnt))
-    )
-   (t
-    (evil-god-state 1)))
-  )
+	"Go into god state, as if it is normal mode"
+	(interactive)
+	(add-hook 'pre-command-hook  #'evil-god-fix-last-command t) ; (setq last-command evil-god-last-command))
+	(setq evil-god-last-command last-command)
+	(cond
+		((and (evil-visual-state-p) persist_visual  )
+		 ( let ((mrk (mark))
+						(pnt (point)))
+					 (evil-god-state )
+					 (set-mark mrk)
+					 (goto-char pnt))
+		 )
+		(t
+			(evil-god-state )))
+	)
 
 ;;;###autoload
-(defun evil-stop-execute-in-god-state (to_insert)
-	(interactive)
-	"Switch back to previous evil state."
+( defun evil-god-fix-last-command ()
+				"Change `last-command' to be the command before `evil-execute-in-god-state'."
+				(setq last-command evil-god-last-command)
+				(remove-hook 'pre-command-hook 'evil-god-fix-last-command)
+				)
+
+(defun evil-stop-execute-in-god-state (target)
 
 	(remove-hook 'pre-command-hook 'evil-god-fix-last-command)
-	(cond 
-		;; go to insert mode
-		(to_insert (evil-insert-state 1))
+	(cond
+		((string= target "normal")(transition-to-normal))
+		((string= target "insert")(transition-to-insert))
+		((string= target "visual")(transition-to-visual))
+		(t (transition-to-normal))
+		)
+	(force-mode-line-update)
+	)
 
-		;; preserve visual mode
-		((and mark-active (or 'persist_visual 'persist_visual_to_evil) ) 
+( defun transition-to-normal()
+				( evil-normal-state )
+				(when (use-region-p)
+					(deactivate-mark))
+				)
 
-		 (unless (memq #'evil-visual-deactivate-hook (default-value 'deactivate-mark-hook))
-			 (add-hook 'deactivate-mark-hook #'evil-visual-deactivate-hook nil t))
+(defun transition-to-insert()
+	(evil-insert-state)
+	)
+(defun transition-to-visual()
+	(force-mode-line-update)
+	(evil-visual-state)
+	(force-mode-line-update)
+	)
 
-		 ;; For evil-visual-activate-hook
-		 (unless (memq #'evil-visual-activate-hook (default-value 'activate-mark-hook))
-			 (add-hook 'activate-mark-hook #'evil-visual-activate-hook nil t))
 
-		 (force-mode-line-update)
-		 (evil-visual-state)
-		 (force-mode-line-update)
+(defun guarded-forward-char ()
+	"Move forward a character only if not at the end of a line."
+	(when (< (point) (line-end-position))
+		(forward-char)))
+
+;;;###autoload
+(defun guarded-backward-char ()
+	"Move backward a character only if not at the beginning of a line."
+	(when (> (point) (line-beginning-position))
+		(backward-char)))
+
+;;;###autoload
+(defun cursor_toggle_motion_insert_to_god (append)
+	"Enter insert mode based on the value of `insert-to-god-cursor-strategy'."
+	;; Ensure insert-to-god-cursor-strategy is bound; set to nil if not.
+	(unless (boundp 'insert-to-god-cursor-strategy)
+		(setq insert-to-god-cursor-strategy nil))
+
+
+	(cond
+		;; Check if the strategy is explicitly set to "same"
+		((string-equal insert-to-god-cursor-strategy "same")
+		 (unless append
+			 (guarded-backward-char)))
+
+		;; Check if the strategy is set to "toggle"
+		((string-equal insert-to-god-cursor-strategy "toggle")
+		 (if append
+			 (guarded-backward-char)))
+
+		;; Placeholder for "reverse" strategy; define behavior if needed
+		((string-equal insert-to-god-cursor-strategy "reverse")
+		 ;; left blank intentionally
 		 )
 
-		;; go to normal state
-		(t 
-			( evil-normal-state )
-			)
+		;; Default case, including when insert-to-god-cursor-strategy is nil
+		((or (null insert-to-god-cursor-strategy) t) (guarded-backward-char))
 		)
 
 	)
 
 
-;;;###autoload
-(defun god-toggle (append)
-  (interactive)
-  ;; in god local mode; switch to evil-insert and move cursor if append is true
-  (if god-local-mode
-      (progn
-	(evil-stop-execute-in-god-state t) ; going into insert mode; mapping escape to go to god mode
-	(
-	 if append (forward-char)); like pressing 'a' in normal mode in vim, otherwise it's like you've pressed 'i'
-	)
-    ;; not in god-local-mode,  move the cursor based on user preference and then go into god-state
-    (progn 
-    ;don't move the cursor if we're in normal mode; entering god mode is like going into a different normal mode
-      (unless (eq evil-state 'normal)
-	(cursor_toggle_motion append)	
-	) ;; end unless
-      (evil-execute-in-god-state )
-      ) ;; end progn
-    )
-  )
-
-
-;;;###autoload
-(defun guarded-backward-char ()
-  "Move backward a character only if not at the beginning of a line."
-  (when (> (point) (line-beginning-position))
-    (backward-char)))
-
-;;;###autoload
-(defun cursor_toggle_motion (append)
-  "Enter insert mode based on the value of `insert-to-god-cursor-strategy'."
-  ;; Ensure insert-to-god-cursor-strategy is bound; set to nil if not.
-  (unless (boundp 'insert-to-god-cursor-strategy)
-    (setq insert-to-god-cursor-strategy nil))
-
-  (cond
-   ;; Check if the strategy is explicitly set to "same"
-   ((string-equal insert-to-god-cursor-strategy "same")
-    (unless append
-      (guarded-backward-char)))
-
-   ;; Check if the strategy is set to "toggle"
-   ((string-equal insert-to-god-cursor-strategy "toggle")
-    (if append
-        (guarded-backward-char)))
-
-   ;; Placeholder for "reverse" strategy; define behavior if needed
-   ((string-equal insert-to-god-cursor-strategy "reverse")
-    ;; left blank intentionally
-    )
-
-   ;; Default case, including when insert-to-god-cursor-strategy is nil
-   ((or (null insert-to-god-cursor-strategy)
-        (t))
-    (guarded-backward-char))))
-
-
 
 (defun switch-to-evil-emacs-state ()
-  "Switch from God mode to Evil Emacs state."
-  (interactive)
-  (evil-emacs-state 1))
+	"Switch from God mode to Evil Emacs state."
+	(interactive)
+	(evil-emacs-state 1))
 
 ;; Assuming `evil-god-state-map` is the keymap for your custom God state,
 ;; you can bind C-z to switch to Evil Emacs state like this:
