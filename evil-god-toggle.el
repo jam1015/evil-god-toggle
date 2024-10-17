@@ -129,7 +129,7 @@
 (defun god-toggle (append)
 
   (cond ((eq evil-state 'god)(cond
-                               ((and mark-active  (or persist_visual_to_evil persist_visual)) (  evil-stop-execute-in-god-state "visual" )(guarded-backward-char))
+                               ((and mark-active  (or persist-visual-to-evil persist_visual)) (  evil-stop-execute-in-god-state "visual" )(guarded-backward-char))
                                ;; forward char because there is an of-by-one difference between how emacs and evil deal with the selection
                                (t                                          (evil-stop-execute-in-god-state "insert")    (when append (guarded-forward-char))    )
                                ))
