@@ -58,6 +58,22 @@
            :type 'boolean
            :group 'evil-god-toggle)
 
+(defcustom persist_visual_to_god nil
+           "Determines whether to persist the visual selection when switching modes.
+           When non-nil, the visual selection will persist. If non-nil it implies both
+           persist_visual_to_evil and persist_visual_to_god.  These parameters are
+           logically related to each other by 'or'"
+           :type 'boolean
+           :group 'evil-god-toggle)
+
+(defcustom persist_visual_to_evil nil
+           "Determines whether to persist the visual selection when switching modes.
+           When non-nil, the visual selection will persist. If non-nil it implies both
+           persist_visual_to_evil and persist_visual_to_god.  These parameters are
+           logically related to each other by 'or'"
+           :type 'boolean
+           :group 'evil-god-toggle)
+
 (require 'evil)
 (require 'god-mode)
 
@@ -113,7 +129,7 @@
 (defun god-toggle (append)
 
   (cond ((eq evil-state 'god)(cond
-                               ((and mark-active  persist_visual) (  evil-stop-execute-in-god-state "visual" )(guarded-backward-char))
+                               ((and mark-active  (or persist_visual_to_evil persist_visual)) (  evil-stop-execute-in-god-state "visual" )(guarded-backward-char))
                                ;; forward char because there is an of-by-one difference between how emacs and evil deal with the selection
                                (t                                          (evil-stop-execute-in-god-state "insert")    (when append (guarded-forward-char))    )
                                ))
