@@ -251,6 +251,5 @@
 ;; you might want to add the binding directly to `god-local-mode-map` like this:
 ;;(eval-after-load 'god-mode '(define-key god-local-mode-map (kbd "C-z") 'switch-to-evil-emacs-state))
 
-
 (provide 'evil-god-toggle)
 ;;; evil-god-toggle.el ends here
