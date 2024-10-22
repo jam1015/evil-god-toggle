@@ -66,6 +66,7 @@
            :type 'boolean
            :group 'evil-god-toggle)
 
+
 (defcustom persist_visual_to_evil nil
            "Determines whether to persist the visual selection when switching modes.
            When non-nil, the visual selection will persist. If non-nil it implies both
@@ -126,15 +127,15 @@
 (defvar evil-god-last-command nil) ; command before entering evil-god-state
 (defvar ran-first-evil-command nil)
 
-(defun god-toggle (append)
+(defun god-toggle ()
 
   (cond ((eq evil-state 'god)(cond
                                ((and mark-active  (or persist-visual-to-evil persist_visual)) (  evil-stop-execute-in-god-state "visual" )(guarded-backward-char))
                                ;; forward char because there is an of-by-one difference between how emacs and evil deal with the selection
-                               (t                                          (evil-stop-execute-in-god-state "insert")    (when append (guarded-forward-char))    )
+                               (t                                          (evil-stop-execute-in-god-state "insert") )
                                ))
         ((eq evil-state 'normal) (evil-execute-in-god-state))
-        ((eq evil-state 'insert)(cursor_toggle_motion_insert_to_god append)(evil-execute-in-god-state))
+        ((eq evil-state 'insert)(evil-execute-in-god-state))
         ((eq evil-state 'visual)(evil-execute-in-god-state))
         (t (evil-execute-in-god-state))
         )
@@ -175,8 +176,7 @@
     ((string= target "visual")(transition-to-visual))
     (t (transition-to-normal))
     )
-  (force-mode-line-update)
-  )
+  (force-mode-line-update))
 
 ( defun transition-to-normal()
         ( evil-normal-state )
@@ -194,47 +194,11 @@
   )
 
 
-(defun guarded-forward-char ()
-  "Move forward a character only if not at the end of a line."
-  (when (< (point) (line-end-position))
-    (forward-char)))
-
 ;;;###autoload
 (defun guarded-backward-char ()
   "Move backward a character only if not at the beginning of a line."
   (when (> (point) (line-beginning-position))
     (backward-char)))
-
-;;;###autoload
-(defun cursor_toggle_motion_insert_to_god (append)
-  "Enter insert mode based on the value of `insert-to-god-cursor-strategy'."
-  ;; Ensure insert-to-god-cursor-strategy is bound; set to nil if not.
-  (unless (boundp 'insert-to-god-cursor-strategy)
-    (setq insert-to-god-cursor-strategy nil))
-
-
-  (cond
-    ;; Check if the strategy is explicitly set to "same"
-    ((string-equal insert-to-god-cursor-strategy "same")
-     (unless append
-       (guarded-backward-char)))
-
-    ;; Check if the strategy is set to "toggle"
-    ((string-equal insert-to-god-cursor-strategy "toggle")
-     (if append
-       (guarded-backward-char)))
-
-    ;; Placeholder for "reverse" strategy; define behavior if needed
-    ((string-equal insert-to-god-cursor-strategy "reverse")
-     ;; left blank intentionally
-     )
-
-    ;; Default case, including when insert-to-god-cursor-strategy is nil
-    ((or (null insert-to-god-cursor-strategy) t) (guarded-backward-char))
-    )
-
-  )
-
 
 
 (defun switch-to-evil-emacs-state ()
