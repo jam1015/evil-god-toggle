@@ -62,7 +62,6 @@ You can customize the cursor behavior when entering god-mode using
 `god_entry_strategy`. Choices include \"same\", \"toggle\", and
 \"reverse\".
 
-
 ### Visual Selection
 
 
