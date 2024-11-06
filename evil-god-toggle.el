@@ -123,9 +123,11 @@
   (force-mode-line-update))
 
 (defun transition-to-normal ()
-  (evil-normal-state)
+  
   (when (use-region-p)
-    (deactivate-mark)))
+    (deactivate-mark))
+(evil-normal-state)
+  )
 
 (defun transition-to-insert ()
   "Transition to insert mode and ensure no region is highlighted."
