@@ -119,13 +119,9 @@
     (cond
      ;; Handle visual selection when toggling from God to Evil mode
      ((and mark-active (or evil-god-toggle-persist-visual-to-evil evil-god-toggle-persist-visual))
-      (if rectangle-mark-mode
-    (progn
-      (message "Rectangle mark mode active: transitioning to visual-block state")
-      (evil-stop-execute-in-god-state "visual-block"))
   (progn
     (message "Rectangle mark mode not active: transitioning to visual state")
-    (evil-stop-execute-in-god-state "visual"))))
+    (evil-stop-execute-in-god-state "visual")))
      ;; Default case to transition into insert mode
      (t (evil-stop-execute-in-god-state "insert"))))
  
@@ -134,24 +130,9 @@
    ((eq evil-state 'insert) (evil-execute-in-god-state))
 
    ;; Handle toggling from Visual, Visual Line, or Visual Block to God mode
-   ((eq evil-state 'visual)
+   ((or (eq evil-state 'visual)  (eq evil-state 'visual-line))
     (if (or evil-god-toggle-persist-visual-to-god evil-god-toggle-persist-visual)
         (progn
-          ;;(add-hook 'activate-mark-hook #'evil-visual-activate-hook t t)
-          (evil-execute-in-god-state))
-      (evil-execute-in-god-state)))
-
-   ((eq evil-state 'visual-line)
-    (if (or evil-god-toggle-persist-visual-to-god evil-god-toggle-persist-visual)
-        (progn
-          ;;(add-hook 'activate-mark-hook #'evil-visual-activate-hook t t)
-          (evil-execute-in-god-state))
-      (evil-execute-in-god-state)))
-
-   ((eq evil-state 'visual-block)
-    (if (or evil-god-toggle-persist-visual-to-god evil-god-toggle-persist-visual)
-        (progn
-          ;;(add-hook 'activate-mark-hook #'evil-visual-activate-hook t t)
           (evil-execute-in-god-state))
       (evil-execute-in-god-state)))
 
@@ -192,7 +173,6 @@
    ((string= target "normal") (transition-to-normal))
    ((string= target "insert") (transition-to-insert))
    ((string= target "visual") (transition-to-visual))
-   ((string= target "visual-block") (transition-to-visual-block))
    (t (transition-to-normal)))
   (force-mode-line-update))
 
@@ -242,24 +222,6 @@ If there is no active region, enter visual mode at the mark. Handles zero-length
       (evil-visual-state)))
   ;; Update mode line
   (force-mode-line-update))
-
-
-
-
-
-
-(defun transition-to-visual-block ()
-  "Transition to Visual Block state, covering the active region if it exists.
-If there is no active region, enter Visual Block mode at point."
-  (transition-to-visual)
-  ;; Change the visual selection type to block
-  (setq evil-visual-selection 'block)
-    ;;(setq    evil-this-type 'block)
-  (evil-visual-refresh)
-  ;; Update mode line
-  (force-mode-line-update))
-
-
 
 
 ;; Assuming `evil-god-state-map` is the keymap for your custom God state,
