@@ -34,9 +34,9 @@
 ;;; Code:
 
 (defgroup evil-god-toggle nil
-  "Customization group for evil-god-toggle."
-  :group 'convenience
-  :prefix "evil-god-toggle-")
+          "Customization group for evil-god-toggle."
+          :group 'convenience
+          :prefix "evil-god-toggle-")
 
 (defcustom evil-god-toggle-persist-visual nil
            "If non-nil, retains the visual selection when toggling between God and Evil modes.
@@ -53,8 +53,8 @@
 
 
 (defcustom evil-god-toggle-persist-visual-to-evil nil
-               "If non-nil, retains the active region when switching from God to Evil mode, as a visual selection.
-               Enabling `evil-god-toggle-persist-visual' will also enable this setting."
+           "If non-nil, retains the active region when switching from God to Evil mode, as a visual selection.
+           Enabling `evil-god-toggle-persist-visual' will also enable this setting."
            :type 'boolean
            :group 'evil-god-toggle)
 
@@ -107,55 +107,58 @@
   ) ; Restore the keymap
 
 (defvar evil-god-last-command nil) ; command before entering evil-god-state
-(defvar ran-first-evil-command nil)
 
 (defun god-toggle ()
+
   "Toggle between God mode and Evil mode, handling visual selections and custom transitions."
-  (message "god-toggle called with evil-state: %s" evil-state)
+  ;;(message "god-toggle called with evil-state: %s" evil-state)
+  ;;(message "kj;lkj;jlkjl;")
   (cond
-   ;; Handle toggling from God mode to another Evil state
-   ((eq evil-state 'god)
-  (message "in god mode conditinal")
-    (cond
-     ;; Handle visual selection when toggling from God to Evil mode
-     ((and mark-active (or evil-god-toggle-persist-visual-to-evil evil-god-toggle-persist-visual))
-  (progn
-    (message "Rectangle mark mode not active: transitioning to visual state")
-    (evil-stop-execute-in-god-state "visual")))
-     ;; Default case to transition into insert mode
-     (t (evil-stop-execute-in-god-state "insert"))))
- 
-   ;; Handle toggling from Normal or Insert state to God mode
-   ((eq evil-state 'normal) (evil-execute-in-god-state))
-   ((eq evil-state 'insert) (evil-execute-in-god-state))
-
-   ;; Handle toggling from Visual, Visual Line, or Visual Block to God mode
-   ((or (eq evil-state 'visual)  (eq evil-state 'visual-line))
-    (if (or evil-god-toggle-persist-visual-to-god evil-god-toggle-persist-visual)
+    ;; Handle toggling from God mode to another Evil state
+    (
+     (eq evil-state 'god)
+     ;;(message "in god mode conditinal")
+     (cond
+       ;; Handle visual selection when toggling from God to Evil mode
+       ((and mark-active (or evil-god-toggle-persist-visual-to-evil evil-god-toggle-persist-visual))
         (progn
-          (evil-execute-in-god-state))
-      (evil-execute-in-god-state)))
+          (evil-stop-execute-in-god-state "visual")))
+       ;; Default case to transition into insert mode
+       (t (evil-stop-execute-in-god-state "insert")));; end internal cond
+     ) ;; end first condition of external cond
 
-   ;; Default case for any other states
-   (t (evil-execute-in-god-state))))
+    ;; Default case for any other states
+    (t 
+
+      ;;(message "reached last case")
+      (evil-execute-in-god-state)))
+  )
+
 
 ;;;###autoload
 (defun evil-execute-in-god-state ()
-  "Go into god state, as if it is normal mode"
+  "Go into God state, as if it is Normal mode."
   (interactive)
-  (add-hook 'pre-command-hook  #'evil-god-fix-last-command t) ; (setq last-command evil-god-last-command))
+  (add-hook 'pre-command-hook #'evil-god-fix-last-command t)
   (setq evil-god-last-command last-command)
   (cond
-    ((and (evil-visual-state-p) evil-god-toggle-persist-visual  )
-     ( let ((mrk (mark))
-            (pnt (point)))
-           (evil-god-state )
-           (set-mark mrk)
-           (goto-char pnt))
-     )
-    (t
-      (evil-god-state )))
-  )
+   ;; Preserve visual selection when toggling to God mode
+   ((and (evil-visual-state-p)
+         (or evil-god-toggle-persist-visual evil-god-toggle-persist-visual-to-god))
+    (let ((mrk (mark))
+          (pnt (point)))
+      (evil-god-state)
+      (set-mark mrk)
+      (goto-char pnt)))
+   ;; Transition without preserving visual selection
+   ((evil-visual-state-p)
+  (evil-exit-visual-state)
+  (evil-god-state)
+)
+   ;; If not in Visual mode, simply enter God mode
+   (t
+    (evil-god-state))))
+
 
 ;;;###autoload
 ( defun evil-god-fix-last-command ()
@@ -167,13 +170,13 @@
 
 (defun evil-stop-execute-in-god-state (target)
   "Stop God state and transition to the given Evil state, handling visual selections."
-  (message "target state: %s" target)
+  ;;(message "target state: %s" target)
   (remove-hook 'pre-command-hook 'evil-god-fix-last-command)
   (cond
-   ((string= target "normal") (transition-to-normal))
-   ((string= target "insert") (transition-to-insert))
-   ((string= target "visual") (transition-to-visual))
-   (t (transition-to-normal)))
+    ((string= target "normal") (transition-to-normal))
+    ((string= target "insert") (transition-to-insert))
+    ((string= target "visual") (transition-to-visual))
+    (t (transition-to-normal)))
   (force-mode-line-update))
 
 (defun transition-to-normal ()
@@ -190,32 +193,45 @@
 
 (defun transition-to-visual ()
   "Transition to visual state, covering the active region if it exists.
-If there is no active region, enter visual mode at the mark. Handles zero-length regions correctly."
+  If there is no active region, enter visual mode at the mark. Handles zero-length regions correctly."
   (if (region-active-p)
-      ;; Active region exists
-      (let* ((start (region-beginning))
-             (end (region-end))
-             (is-forward (<= start end)))
-        ;; Adjust the endpoints for Evil's inclusive selection
-        (if is-forward
-            ;; Forward region: decrement end by 1
-            (setq end (max (1- end) start))
-          ;; Backward region: increment start by 1
-          (setq start (min (1+ start) end)))
+    ;; Active region exists
+    (let* ((start (region-beginning))
+           (end (region-end))
+           (is-forward (<= start end)))
+      ;; Adjust the endpoints for Evil's inclusive selection
+      (if is-forward
+        ;; Forward region: decrement end by 1
+        (setq end (max (1- end) start))
+        ;; Backward region: increment start by 1
+        (setq start (min (1+ start) end)))
+      ;; Exit God mode if necessary
+      (when (bound-and-true-p god-local-mode)
+        (evil-normal-state))
+      ;; Use evil-visual-select to cover the adjusted region
+
+(if is-forward
+    (progn
+      ;; This block executes if is-forward is non-nil (true)
+      (message "forward")
+      (evil-visual-select start end))
+  (progn
+    ;; This block executes if is-forward is nil (false)
+    (message "backward")
+    (evil-visual-select end start)))
+
+
+      )
+
+    ;; No active region or zero-length region
+    (if (mark t)
+      (progn
         ;; Exit God mode if necessary
         (when (bound-and-true-p god-local-mode)
           (evil-normal-state))
-        ;; Use evil-visual-select to cover the adjusted region
-        (evil-visual-select start end))
-    ;; No active region or zero-length region
-    (if (mark t)
-        (progn
-          ;; Exit God mode if necessary
-          (when (bound-and-true-p god-local-mode)
-            (evil-normal-state))
-          ;; Enter visual mode at the mark position
-          (evil-visual-state)
-          (goto-char (mark t)))
+        ;; Enter visual mode at the mark position
+        (evil-visual-state)
+        (goto-char (mark t)))
       ;; If no mark is set, enter visual mode at point
       (when (bound-and-true-p god-local-mode)
         (evil-normal-state))
