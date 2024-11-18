@@ -69,6 +69,21 @@
                    :exit-hook (evil-god-stop-hook-fun)
                    :intercept-esc nil)
 
+
+
+
+
+(defun evil-god-toggle--evil-set-toggle-key-advice (key)
+  "Also set toggle key in `evil-god-state-map' when `evil-set-toggle-key' is called."
+  (let ((key (read-kbd-macro evil-toggle-key)))
+    (when (keymapp evil-god-state-map)
+      (define-key evil-god-state-map key 'evil-emacs-state))))
+(advice-add 'evil-set-toggle-key :after #'evil-god-toggle--evil-set-toggle-key-advice)
+
+(evil-god-toggle--evil-set-toggle-key-advice evil-toggle-key)
+
+
+
 ;; when entering visual state checks if previous state was god; if it was make the previous state be normal
 ;; this makes `escape' behave as expected
 (defun check-and-update-previous-state-visual ()
@@ -122,21 +137,21 @@
        ;; Handle visual selection when toggling from God to Evil mode
        ((and mark-active (or evil-god-toggle-persist-visual-to-evil evil-god-toggle-persist-visual))
         (progn
-          (evil-stop-execute-in-god-state "visual")))
+          (evil-toggle-from-god-state "visual")))
        ;; Default case to transition into insert mode
-       (t (evil-stop-execute-in-god-state "insert")));; end internal cond
+       (t (evil-toggle-from-god-state "insert")));; end internal cond
      ) ;; end first condition of external cond
 
     ;; Default case for any other states
     (t 
 
       ;;(message "reached last case")
-      (evil-execute-in-god-state)))
+      (evil-toggle-to-god-state)))
   )
 
 
 ;;;###autoload
-(defun evil-execute-in-god-state ()
+(defun evil-toggle-to-god-state ()
   "Go into God state, as if it is Normal mode."
   (interactive)
   (add-hook 'pre-command-hook #'evil-god-fix-last-command t)
@@ -162,13 +177,13 @@
 
 ;;;###autoload
 ( defun evil-god-fix-last-command ()
-        "Change `last-command' to be the command before `evil-execute-in-god-state'."
+        "Change `last-command' to be the command before `evil-toggle-to-god-state'."
         (setq last-command evil-god-last-command)
         (remove-hook 'pre-command-hook 'evil-god-fix-last-command)
         )
 
 
-(defun evil-stop-execute-in-god-state (target)
+(defun evil-toggle-from-god-state (target)
   "Stop God state and transition to the given Evil state, handling visual selections."
   ;;(message "target state: %s" target)
   (remove-hook 'pre-command-hook 'evil-god-fix-last-command)
@@ -191,63 +206,46 @@
   (evil-insert-state))
 
 
+
 (defun transition-to-visual ()
   "Transition to visual state, covering the active region if it exists.
-  If there is no active region, enter visual mode at the mark. Handles zero-length regions correctly."
+If there is no active region, enter visual mode at the mark. Handles zero-length regions correctly."
   (if (region-active-p)
-    ;; Active region exists
-    (let* ((start (region-beginning))
-           (end (region-end))
-           (is-forward (<= start end)))
-      ;; Adjust the endpoints for Evil's inclusive selection
-      (if is-forward
-        ;; Forward region: decrement end by 1
-        (setq end (max (1- end) start))
-        ;; Backward region: increment start by 1
-        (setq start (min (1+ start) end)))
-      ;; Exit God mode if necessary
-      (when (bound-and-true-p god-local-mode)
-        (evil-normal-state))
-      ;; Use evil-visual-select to cover the adjusted region
-
-(if is-forward
-    (progn
-      ;; This block executes if is-forward is non-nil (true)
-      (message "forward")
-      (evil-visual-select start end))
-  (progn
-    ;; This block executes if is-forward is nil (false)
-    (message "backward")
-    (evil-visual-select end start)))
+      ;; Active region exists
+      (let* ((start (mark t))
+             (end (point))
+             (is-forward (<= start end))
+           (selection-start (region-beginning))
+           (selection-end (region-end))
+             )
 
 
-      )
-
-    ;; No active region or zero-length region
-    (if (mark t)
-      (progn
+        ;; Adjust the endpoints for Evil's inclusive selection
+            (setq selection-end (max (1- selection-end) selection-start))
         ;; Exit God mode if necessary
         (when (bound-and-true-p god-local-mode)
           (evil-normal-state))
-        ;; Enter visual mode at the mark position
-        (evil-visual-state)
-        (goto-char (mark t)))
+        ;; Use evil-visual-select to cover the adjusted region
+        (if is-forward
+            (progn
+              (evil-visual-select selection-start selection-end))
+          (progn
+            (evil-visual-select selection-start selection-end nil -1))))
+    ;; No active region or zero-length region
+    (if (mark t)
+        (progn
+          ;; Exit God mode if necessary
+          (when (bound-and-true-p god-local-mode)
+            (evil-normal-state))
+          ;; Enter visual mode at the mark position
+          (evil-visual-state)
+          (goto-char (mark t)))
       ;; If no mark is set, enter visual mode at point
       (when (bound-and-true-p god-local-mode)
         (evil-normal-state))
       (evil-visual-state)))
   ;; Update mode line
   (force-mode-line-update))
-
-
-;; Assuming `evil-god-state-map` is the keymap for your custom God state,
-;; you can bind C-z to switch to Evil Emacs state like this:
-;; (define-key evil-god-state-map (kbd "C-z") 'switch-to-evil-emacs-state)
-
-;; If the above doesn't work because `evil-god-state-map` isn't defined or
-;; you want to ensure it works directly within God mode regardless of Evil's state,
-;; you might want to add the binding directly to `god-local-mode-map` like this:
-;;(eval-after-load 'god-mode '(define-key god-local-mode-map (kbd "C-z") 'switch-to-evil-emacs-state))
 
 (provide 'evil-god-toggle)
 ;;; evil-god-toggle.el ends here
