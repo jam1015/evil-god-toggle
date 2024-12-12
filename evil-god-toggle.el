@@ -69,17 +69,6 @@
                    :exit-hook (evil-god-stop-hook-fun)
                    :intercept-esc nil)
 
-;; when entering visual state checks if previous state was god; if it was make the previous state be normal
-;; this makes `escape' behave as expected
-(defun check-and-update-previous-state-visual ()
-  (when (eq evil-previous-state 'god)
-    (setq evil-previous-state 'normal)
-    (setq evil-previous-state-alist
-          (assq-delete-all 'god evil-previous-state-alist))
-    (add-to-list 'evil-previous-state-alist (cons 'god 'normal))))
-
-(add-hook 'evil-visual-state-entry-hook 'check-and-update-previous-state-visual)
-
 ;; hook for starting god mode
 (defun evil-god-start-hook-fun ()
   "Run before entering `evil-god-state'."
@@ -91,7 +80,8 @@
   (god-local-mode 1)
   )
 
-;; putting the visual state hooks back and runing them if necessary
+;; hook for stopping god mode
+;; putting the mark activation hooks back that deal with visual state
 (defun evil-god-stop-hook-fun ()
   "Run before exiting `evil-god-state'."
 
@@ -104,15 +94,24 @@
     (add-hook 'deactivate-mark-hook #'evil-visual-deactivate-hook nil t))
 
   (god-local-mode -1)
-  ) ; Restore the keymap
+)
+;; when entering visual state checks if previous state was god; if it was make the previous state be normal
+;; this makes `escape' return the state to 'normal' as expected, whereas without this function the state
+;; would be returned to god
+(defun check-and-update-previous-state-visual ()
+  (when (eq evil-previous-state 'god)
+    (setq evil-previous-state 'normal)
+    (setq evil-previous-state-alist (assq-delete-all 'god evil-previous-state-alist))
+    (add-to-list 'evil-previous-state-alist (cons 'god 'normal))))
+
+(add-hook 'evil-visual-state-entry-hook 'check-and-update-previous-state-visual)
+
 
 (defvar evil-god-last-command nil) ; command before entering evil-god-state
 
-(defun god-toggle ()
-
+( defun god-toggle ()
   "Toggle between God mode and Evil mode, handling visual selections and custom transitions."
   ;;(message "god-toggle called with evil-state: %s" evil-state)
-  ;;(message "kj;lkj;jlkjl;")
   (cond
     ;; Handle toggling from God mode to another Evil state
     (
@@ -127,13 +126,20 @@
        (t (evil-stop-execute-in-god-state "insert")));; end internal cond
      ) ;; end first condition of external cond
 
-    ;; Default case for any other states
-    (t 
-
+    ;; ;state is not god; Go into god state
+    (t
       ;;(message "reached last case")
       (evil-execute-in-god-state)))
-  )
+)
 
+(defvar evil-god-last-command nil) ; command before entering evil-god-state
+
+;;;###autoload
+( defun evil-god-fix-last-command ()
+        "Change `last-command' to be the command before `evil-execute-in-god-state'."
+        (setq last-command evil-god-last-command)
+        (remove-hook 'pre-command-hook 'evil-god-fix-last-command)
+        )
 
 ;;;###autoload
 (defun evil-execute-in-god-state ()
@@ -159,13 +165,6 @@
    (t
     (evil-god-state))))
 
-
-;;;###autoload
-( defun evil-god-fix-last-command ()
-        "Change `last-command' to be the command before `evil-execute-in-god-state'."
-        (setq last-command evil-god-last-command)
-        (remove-hook 'pre-command-hook 'evil-god-fix-last-command)
-        )
 
 
 (defun evil-stop-execute-in-god-state (target)
