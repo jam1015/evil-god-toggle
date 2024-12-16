@@ -66,7 +66,6 @@ The package provides options for maintaining visual selection when
 toggling modes. To enable this, set `persist_visual`,
 `persist_visual_to_evil`, and `persist_visual_to_god` to true.
 
-
 ### Cursor Appearance
 
 Customize cursor appearance for different states. For example:
