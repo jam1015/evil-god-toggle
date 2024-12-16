@@ -40,16 +40,6 @@
           :prefix "god-"
           )
 
-(defcustom insert-to-god-cursor-motion "default"
-           "Controls how the cursor moves when entering god-mode."
-           :type '( radio
-                    (string :tag "Same as Vim" "default")
-                    (string :tag "Stay in the same place" "same")
-                    (string :tag "Toggle position" "toggle")
-                    (string :tag "Reverse direction" "reverse")
-                    )
-           :group 'evil-god-toggle)
-
 (defcustom persist_visual nil
            "Determines whether to persist the visual selection when switching modes.
            When non-nil, the visual selection will persist. If non-nil it implies both
@@ -95,7 +85,7 @@
           (assq-delete-all 'god evil-previous-state-alist))
     (add-to-list 'evil-previous-state-alist (cons 'god 'normal))))
 
-(add-hook 'evil-visual-state-entry-hook 'check-and-update-previous-state-visual)
+(add-hook 'evil-visual-state-entry-hook 'check-and-update-previous-state-visual t)
 
 ;; hook for starting god mode
 (defun evil-god-start-hook-fun ()
@@ -139,8 +129,7 @@
         ((eq evil-state 'visual)(evil-execute-in-god-state))
         (t (evil-execute-in-god-state))
         )
-
-  )
+)
 
 ;;;###autoload
 (defun evil-execute-in-god-state ()
@@ -149,7 +138,7 @@
   (add-hook 'pre-command-hook  #'evil-god-fix-last-command t) ; (setq last-command evil-god-last-command))
   (setq evil-god-last-command last-command)
   (cond
-    ((and (evil-visual-state-p) persist_visual  )
+    ((and (evil-visual-state-p) (or persist_visual_to_god persist_visual )  )
      ( let ((mrk (mark))
             (pnt (point)))
            (evil-god-state )
@@ -158,6 +147,36 @@
      )
     (t
       (evil-god-state )))
+)
+
+(defun transient-god-state ()
+  (interactive)
+  (setq evil-execute-in-god-state-buffer (current-buffer))
+  (add-hook 'post-command-hook #'t)
+  (evil-execute-in-god-state)
+)
+
+
+(defun stop-transient-god-state ()
+  (unless (or (eq this-command #'evil-execute-in-god-state)
+              (eq this-command #'universal-argument)
+              (eq this-command #'universal-argument-minus)
+              (eq this-command #'universal-argument-more)
+              (eq this-command #'universal-argument-other-key)
+              (eq this-command #'digit-argument)
+              (eq this-command #'negative-argument)
+              (minibufferp))
+    (remove-hook 'pre-command-hook 'evil-god-fix-last-command)
+    (remove-hook 'post-command-hook 'evil-stop-execute-in-god-state)
+    (when (buffer-live-p evil-execute-in-god-state-buffer)
+      (with-current-buffer evil-execute-in-god-state-buffer
+                           (if (and (eq evil-previous-state 'visual)
+                                    (not (use-region-p)))
+                             (progn
+                               (evil-change-to-previous-state)
+                               (evil-exit-visual-state))
+                             (evil-change-to-previous-state))))
+    (setq evil-execute-in-god-state-buffer nil))
   )
 
 ;;;###autoload
@@ -168,15 +187,13 @@
         )
 
 (defun evil-stop-execute-in-god-state (target)
-
   (remove-hook 'pre-command-hook 'evil-god-fix-last-command)
   (cond
     ((string= target "normal")(transition-to-normal))
     ((string= target "insert")(transition-to-insert))
     ((string= target "visual")(transition-to-visual))
     (t (transition-to-normal))
-    )
-  (force-mode-line-update))
+    ) (force-mode-line-update))
 
 ( defun transition-to-normal()
         ( evil-normal-state )
