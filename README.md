@@ -74,7 +74,6 @@ Customize cursor appearance for different states. For example:
     (setq evil-god-state-cursor '(box "Red"))
     (setq evil-insert-state-cursor '(bar "Red"))
 
-
 ## Best Practices
 
 If you\'re well-acquainted with both Vim and Emacs keybindings, this
