@@ -36,7 +36,6 @@ It takes the argument: `append`.  The purpose of this argument is to modify what
 
 - If Emacs is in Normal mode and `god-toggle` is called, Emacs will enter God Mode and the cursor will remain in the same place. `append` had no effect.
 
-- If Emacs is in God Mode of and this function is called, Emacs will enter Evil's insert mode. Further, if the argument `append` is non-nil the cursor will move one space forward as if `a` was pressed to enter insert Normal mode in Vim. 
 
 - If Emacs is in Evil's insert mode and this function is called, Emacs will go into God Mode.  Further, the motion of the cursor is determined by the global variable `insert-to-god-cursor-strategy`
 
@@ -57,14 +56,11 @@ Customize the keybindings to fit your specific needs. For instance:
 
 ### Entry Strategy
 
-
 You can customize the cursor behavior when entering god-mode using
 `god_entry_strategy`. Choices include \"same\", \"toggle\", and
 \"reverse\".
 
-
 ### Visual Selection
-
 
 The package provides options for maintaining visual selection when
 toggling modes. To enable this, set `persist_visual`,
@@ -72,7 +68,6 @@ toggling modes. To enable this, set `persist_visual`,
 
 
 ### Cursor Appearance
-
 
 Customize cursor appearance for different states. For example:
 

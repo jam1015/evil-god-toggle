@@ -77,7 +77,7 @@
                    :intercept-esc nil)
 
 ;; when entering visual state checks if previous state was god; if it was make the previous state be normal
-;; this makes `escape` behave as expected
+;; this makes `escape' behave as expected
 (defun check-and-update-previous-state-visual ()
   (when (eq evil-previous-state 'god)
     (setq evil-previous-state 'normal)
@@ -110,7 +110,6 @@
   (unless (memq #'evil-visual-deactivate-hook (buffer-local-value 'deactivate-mark-hook (current-buffer)))
     (add-hook 'deactivate-mark-hook #'evil-visual-deactivate-hook nil t))
 
-  ;;(unless  persist_visual  (deactivate-mark))
   (god-local-mode -1)
   ) ; Restore the keymap
 
@@ -118,6 +117,14 @@
 (defvar ran-first-evil-command nil)
 
 (defun god-toggle ()
+  "Toggle between God mode and Evil mode, handling visual selections and custom transitions."
+  (message "god-toggle called with evil-state: %s" evil-state)
+  (cond
+   ;; Handle toggling from God mode to another Evil state
+   ((eq evil-state 'god)
+      (evil-stop-execute-in-god-state "insert"))
+   ;; Default case for any other states
+   (t (evil-execute-in-god-state))))
 
   (cond ((eq evil-state 'god)(cond
                                ((and mark-active  (or persist-visual-to-evil persist_visual)) (  evil-stop-execute-in-god-state "visual" )(guarded-backward-char))
@@ -135,7 +142,7 @@
 (defun evil-execute-in-god-state ()
   "Go into god state, as if it is normal mode"
   (interactive)
-  (add-hook 'pre-command-hook  #'evil-god-fix-last-command t) ; (setq last-command evil-god-last-command))
+  (add-hook 'pre-command-hook  #'evil-god-fix-last-command t)
   (setq evil-god-last-command last-command)
   (cond
     ((and (evil-visual-state-p) (or persist_visual_to_god persist_visual )  )
@@ -183,8 +190,8 @@
 ( defun evil-god-fix-last-command ()
         "Change `last-command' to be the command before `evil-execute-in-god-state'."
         (setq last-command evil-god-last-command)
-        (remove-hook 'pre-command-hook 'evil-god-fix-last-command)
-        )
+        (remove-hook 'pre-command-hook 'evil-god-fix-last-command) )
+
 
 (defun evil-stop-execute-in-god-state (target)
   (remove-hook 'pre-command-hook 'evil-god-fix-last-command)
@@ -194,43 +201,20 @@
     ((string= target "visual")(transition-to-visual))
     (t (transition-to-normal))
     ) (force-mode-line-update))
-
-( defun transition-to-normal()
-        ( evil-normal-state )
-        (when (use-region-p)
-          (deactivate-mark))
-        )
-
-(defun transition-to-insert()
-  (evil-insert-state)
-  )
-(defun transition-to-visual()
-  (force-mode-line-update)
-  (evil-visual-state)
-  (force-mode-line-update)
+(defun transition-to-normal ()
+  
+  (when (use-region-p)
+    (deactivate-mark))
+(evil-normal-state)
   )
 
-
-;;;###autoload
-(defun guarded-backward-char ()
-  "Move backward a character only if not at the beginning of a line."
-  (when (> (point) (line-beginning-position))
-    (backward-char)))
-
-
-(defun switch-to-evil-emacs-state ()
-  "Switch from God mode to Evil Emacs state."
-  (interactive)
-  (evil-emacs-state 1))
-
-;; Assuming `evil-god-state-map` is the keymap for your custom God state,
-;; you can bind C-z to switch to Evil Emacs state like this:
-;; (define-key evil-god-state-map (kbd "C-z") 'switch-to-evil-emacs-state)
-
-;; If the above doesn't work because `evil-god-state-map` isn't defined or
-;; you want to ensure it works directly within God mode regardless of Evil's state,
-;; you might want to add the binding directly to `god-local-mode-map` like this:
-;;(eval-after-load 'god-mode '(define-key god-local-mode-map (kbd "C-z") 'switch-to-evil-emacs-state))
+(defun transition-to-insert ()
+  "Transition to insert mode and ensure no region is highlighted."
+  (when (use-region-p)
+    (deactivate-mark))
+  (evil-insert-state))
 
 (provide 'evil-god-toggle)
-;;; evil-god-toggle.el ends here
+
+
+
