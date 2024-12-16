@@ -75,6 +75,6 @@ Customize cursor appearance for different states. For example:
 
 ## Best Practices
 
-If you\'re well-acquainted with both Vim and Emacs keybindings, this
+If you're well-acquainted with both Vim and Emacs keybindings, this
 package helps you get the best of both worlds. Customize the keybindings
 and other options to fit seamlessly into your workflow.
