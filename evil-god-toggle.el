@@ -33,59 +33,60 @@
 
 ;;; Code:
 
-(
- defgroup evil-god-toggle nil
-          "Customization group for evil-god-toggle."
-          :group 'convenience
-          :prefix "god-"
-          )
+(defgroup evil-god-toggle nil
+  "Customization group for evil-god-toggle."
+  :group 'convenience
+  :prefix "god-")
 
 (defcustom evil-god-toggle-persist-visual nil
-           "Determines whether to persist the visual selection when switching modes.
-           When non-nil, the visual selection will persist. If non-nil it implies both
-           evil-god-toggle-persist-visual-to-evil and evil-god-toggle-persist-visual-to-god.  These parameters are
-           logically related to each other by 'or'"
-           :type 'boolean
-           :group 'evil-god-toggle)
+  "Determines whether to persist the visual selection when switching modes.
+When non-nil, the visual selection will persist. If non-nil, this implies 
+both `evil-god-toggle-persist-visual-to-evil` and 
+`evil-god-toggle-persist-visual-to-god`. These parameters are logically 
+related to each other by `or'."
+  :type 'boolean
+  :group 'evil-god-toggle)
 
 (defcustom evil-god-toggle-persist-visual-to-god nil
-           "Determines whether to persist the visual selection when switching modes.
-           When non-nil, the visual selection will persist. If non-nil it implies both
-           evil-god-toggle-persist-visual-to-evil and evil-god-toggle-persist-visual-to-god.  These parameters are
-           logically related to each other by 'or'"
-           :type 'boolean
-           :group 'evil-god-toggle)
-
+  "Determines whether to persist the visual selection when switching to God mode.
+When non-nil, the visual selection will persist. If non-nil, this implies 
+both `evil-god-toggle-persist-visual-to-evil` and 
+`evil-god-toggle-persist-visual-to-god`. These parameters are logically 
+related to each other by `or'."
+  :type 'boolean
+  :group 'evil-god-toggle)
 
 (defcustom evil-god-toggle-persist-visual-to-evil nil
-           "Determines whether to persist the visual selection when switching modes.
-           When non-nil, the visual selection will persist. If non-nil it implies both
-           evil-god-toggle-persist-visual-to-evil and evil-god-toggle-persist-visual-to-god.  These parameters are
-           logically related to each other by 'or'"
-           :type 'boolean
-           :group 'evil-god-toggle)
+  "Determines whether to persist the visual selection when switching to Evil mode.
+When non-nil, the visual selection will persist. If non-nil, this implies 
+both `evil-god-toggle-persist-visual-to-evil` and 
+`evil-god-toggle-persist-visual-to-god`. These parameters are logically 
+related to each other by `or'."
+  :type 'boolean
+  :group 'evil-god-toggle)
 
-;;(require 'evil)
-;;(require 'god-mode)
+(require 'evil)
+(require 'god-mode)
 
-;;(evil-define-state god
-;;                   "God state."
-;;                   :tag " <G> "
-;;                   :message "-- GOD MODE --"
-;;                   :entry-hook (evil-god-start-hook-fun)
-;;                   :exit-hook (evil-god-stop-hook-fun)
-;;                   :intercept-esc nil)
-;;
-;;;; when entering visual state checks if previous state was god; if it was make the previous state be normal
-;;;; this makes `escape' behave as expected
-;;(defun check-and-update-previous-state-visual ()
-;;  (when (eq evil-previous-state 'god)
-;;    (setq evil-previous-state 'normal)
-;;    (setq evil-previous-state-alist
-;;          (assq-delete-all 'god evil-previous-state-alist))
-;;    (add-to-list 'evil-previous-state-alist (cons 'god 'normal))))
-;;
-;;(add-hook 'evil-visual-state-entry-hook 'check-and-update-previous-state-visual t)
+(evil-define-state god
+  "God state."
+  :tag " <G> "
+  :message "-- GOD MODE --"
+  :entry-hook (evil-god-start-hook-fun)
+  :exit-hook (evil-god-stop-hook-fun)
+  :intercept-esc nil)
+
+(defun check-and-update-previous-state-visual ()
+  "Ensure the previous state is updated to \\='normal\\=` when entering
+  visual state. If the previous state was `\\='god\\=`, reset it to
+  \\='normal\\=`."
+  (when (eq evil-previous-state 'god)
+    (setq evil-previous-state 'normal)
+    (setq evil-previous-state-alist
+          (assq-delete-all 'god evil-previous-state-alist))
+    (add-to-list 'evil-previous-state-alist (cons 'god 'normal))))
+
+(add-hook 'evil-visual-state-entry-hook 'check-and-update-previous-state-visual t)
 ;;
 ;;;; hook for starting god mode
 ;;(defun evil-god-start-hook-fun ()
