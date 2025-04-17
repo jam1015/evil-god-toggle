@@ -66,8 +66,9 @@ When non-nil, the visual selection will persist."
   "God state."
   :tag " <G> "
   :message "-- GOD MODE --"
-  :entry-hook (evil-god-start-hook-fun)
-  :exit-hook (evil-god-stop-hook-fun)
+  :entry-hook (evil-god-toggle-start-hook-fun)
+  :exit-hook (evil-god-toggle-stop-hook-fun)
+  :input-method t
   :intercept-esc nil)
 
 (defun evil-god-toggle-check-and-update-previous-state-visual ()
@@ -83,7 +84,8 @@ previous state."
     (setq evil-previous-state-alist
           (assq-delete-all 'god evil-previous-state-alist))
     (add-to-list 'evil-previous-state-alist (cons 'god 'normal))))
-(add-hook 'evil-visual-state-entry-hook 'check-and-update-previous-state-visual )
+
+(add-hook 'evil-visual-state-entry-hook 'evil-god-toggle-check-and-update-previous-state-visual )
 
 ;; hook for starting god mode
 (defun evil-god-toggle-start-hook-fun ()
@@ -110,12 +112,14 @@ they were removed when god state started"
 
   (god-local-mode -1)) ; Restore the keymap
 
+
 (defvar evil-god-toggle-last-command nil
   "Command executed just before entering god state.")
 
 (defvar evil-god-toggle-ran-first-evil-command nil
   "Non-nil if the first evil command ran after switching modes.")
 
+;;------------------------------ the actual toggle function -----------------------------------
 (defun evil-god-toggle ()
   "Toggle between God mode and Evil mode.
 Handle visual selections and custom transitions."
@@ -127,19 +131,16 @@ Handle visual selections and custom transitions."
    ;; Default case for any other states
    (t (evil-god-toggle-execute-in-god-state))))
 
-;;  (cond ((eq evil-state 'god)(cond
-;;                               ((and mark-active  (or evil-god-toggle-persist-visual-to-evil evil-god-toggle-persist-visual)) (  evil-god-toggle-stop-execute-in-god-state "visual" )
-;;                                ;;(guarded-backward-char)
-;;                                )
-;;                               ;; forward char because there is an of-by-one difference between how emacs and evil deal with the selection
-;;                               (t                                          (evil-god-toggle-stop-execute-in-god-state "insert") )
-;;                               ))
-;;        ((eq evil-state 'normal) (evil-god-toggle-execute-in-god-state))
-;;        ((eq evil-state 'insert)(evil-god-toggle-execute-in-god-state))
-;;        ((eq evil-state 'visual)(evil-god-toggle-execute-in-god-state))
-;;        (t (evil-god-toggle-execute-in-god-state)))
 
 
+
+
+
+
+
+
+
+;; ------------------------ actually execute in god state --------------------------------
 (defun evil-god-toggle-execute-in-god-state ()
 "Go into god state, as if it is normal mode."
   (interactive)
@@ -155,53 +156,32 @@ Handle visual selections and custom transitions."
     (t
       (evil-god-state ))))
 
-;;(defun evil-god-toggle-transient-god-state ()
-;;"Go into god state for one command."
-;;  (interactive)
-;;  (setq evil-god-toggle-execute-in-god-state-buffer (current-buffer))
-;;  (add-hook 'post-command-hook #'t)
-;;  (evil-god-toggle-execute-in-god-state))
-;;
-;;
-;;(defun stop-transient-god-state ()
-;;  (unless (or (eq this-command #'evil-execute-in-god-state)
-;;              (eq this-command #'universal-argument)
-;;              (eq this-command #'universal-argument-minus)
-;;              (eq this-command #'universal-argument-more)
-;;              (eq this-command #'universal-argument-other-key)
-;;              (eq this-command #'digit-argument)
-;;              (eq this-command #'negative-argument)
-;;              (minibufferp))
-;;    (remove-hook 'pre-command-hook 'evil-god-fix-last-command)
-;;    (remove-hook 'post-command-hook 'evil-stop-execute-in-god-state)
-;;    (when (buffer-live-p evil-execute-in-god-state-buffer)
-;;      (with-current-buffer evil-execute-in-god-state-buffer
-;;                           (if (and (eq evil-previous-state 'visual)
-;;                                    (not (use-region-p)))
-;;                             (progn
-;;                               (evil-change-to-previous-state)
-;;                               (evil-exit-visual-state))
-;;                             (evil-change-to-previous-state))))
-;;    (setq evil-execute-in-god-state-buffer nil))
-;;  )
-;;
 ;;;###autoload
 (defun evil-god-toggle-fix-last-command ()
-        "Change `last-command' to be the command before `evil-execute-in-god-state'."
+"Change `last-command' to be the command before `evil-execute-in-god-state'."
         (setq last-command evil-god-toggle-last-command)
         (remove-hook 'pre-command-hook 'evil-god-fix-last-command))
 
 
+
+
+
+;; -------------------------------- stop god state and go to a different desired state -----------------
+
 (defun evil-god-toggle-stop-execute-in-god-state (target)
-"Wrapper function for leaving god state to go to other evil states.
-That state is determined by TARGET."
+"Wrapper for leaving god state and switching to another Evil state based on TARGET."
   (remove-hook 'pre-command-hook 'evil-god-fix-last-command)
   (cond
-    ((string= target "normal")(evil-god-toggle-transition-to-normal))
-    ((string= target "insert")(evil-god-toggle-transition-to-insert))
-    ((string= target "visual")(evil-god-toggle-transition-to-visual))
-    (t (evil-god-toggle-transition-to-normal)))
+   ((equal target "normal")
+    (evil-god-toggle-transition-to-normal))
+   ((equal target "insert")
+    (evil-god-toggle-transition-to-insert))
+   ((equal target "visual")
+    (evil-god-toggle-transition-to-visual))
+   (t
+    (evil-god-toggle-transition-to-normal)))
   (force-mode-line-update))
+
 
 (defun evil-god-toggle-transition-to-normal ()
 "Transition to evil normal state from god state."
@@ -210,13 +190,13 @@ That state is determined by TARGET."
 (evil-normal-state))
 
 (defun evil-god-toggle-transition-to-insert ()
-  "Transition to insert mode and ensure no region is highlighted."
+"Transition to insert mode and ensure no region is highlighted."
   (when (use-region-p)
     (deactivate-mark))
   (evil-insert-state))
 
 (defun evil-god-toggle-transition-to-visual ()
-  "Transition to insert mode and ensure no region is highlighted."
+"Transition to insert mode and ensure no region is highlighted."
   (when (use-region-p)
     (deactivate-mark))
   (evil-visual-state))
