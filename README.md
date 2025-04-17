@@ -7,9 +7,25 @@
 ## Description
 
 `evil-god-toggle` is an Emacs package that seamlessly toggles between
-`evil-mode` (Vim emulation) and `god-mode` (Emacs modal editing). It
-preserves visual selections optionally, supports both per-buffer and
-global God mode, and provides one-shot or persistent toggles.
+[`evil`](https://github.com/emacs-evil/evil) (Vim emulation) and [`god-mode`](https://github.com/emacsorphanage/god-mode) (Emacs modal editing). The idea is that `god-mode` becomes a submode of Evil on the same level as normal-mode, that you can enter or leave at will.
+
+The way to tranfer  between `god-mode` and `evil-mode` 
+
+
+## is with the `evil-god-toggle` function. 
+
+- From insert mode it will always take you to god mode.  
+- From god mode with no region active it will take you to insert mode.
+- From visual mode
+    - If both `evil-god-toggle-persist-visual` and `evil-god-toggle-persist-visual-to-god` are false it will take you to god mode with no region active.
+    - If either `evil-god-toggle-persist-visual` and `evil-god-toggle-persist-visual-to-god` non-nil it will tkae you to god mode with a region active that is equivalent to the visual selection.
+
+the function
+
+## `evil-god-toggle-stop-choose-state`
+
+Is will transition from god-mode to evil-mode.
+
 
 ## Installation
 
@@ -61,6 +77,23 @@ global God mode, and provides one-shot or persistent toggles.
 
 ## Function Reference
 
+### `evil-god-toggle`
+
+Public: toggle between insert mode and god mode.
+
+### `evil-god-toggle-bail`
+
+Public: immediate exit from God mode to Evil Normal, cleaning up hooks.
+
+### `evil-god-toggle-stop-choose-state`
+
+Public: choose Evil state to return to, stashing/restoring visual
+selection if enabled.
+
+### `evil-god-toggle-once`
+
+Public: momentary God state for a single command, then revert.
+
 ### `evil-god-toggle-start-hook-fun`
 
 Runs on entering God state: removes Evil visual hooks, enables God
@@ -89,22 +122,10 @@ Internal: leaves God state then calls transition based on `TARGET`.
 Perform appropriate Evil state switch, handling region
 activation/deactivation.
 
-### `evil-god-toggle-stop-choose-state`
-
-Public: choose Evil state to return to, stashing/restoring visual
-selection if enabled.
-
-### `evil-god-toggle-once`
-
-Public: momentary God state for a single command, then revert.
-
 ### `evil-god-toggle--exit-once`
 
 Internal: triggers exit after the one-shot God command runs.
 
-### `evil-god-toggle-bail`
-
-Public: immediate exit from God mode to Evil Normal, cleaning up hooks.
 
 ## Variables
 
