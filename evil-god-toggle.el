@@ -197,19 +197,20 @@ Handle visual selections and custom transitions."
 
 (defun evil-god-toggle-transition-to-normal ()
 "Transition to evil normal state from god state."
-  (when (use-region-p)
+  (when (region-active-p)
+    (message "should be deactiviating mark")
     (deactivate-mark))
 (evil-normal-state))
 
 (defun evil-god-toggle-transition-to-insert ()
 "Transition to insert mode and ensure no region is highlighted."
-  (when (use-region-p)
+  (when (region-active-p)
     (deactivate-mark))
   (evil-insert-state))
 
 (defun evil-god-toggle-transition-to-visual ()
   "Enter Evil visual (charwise), restoring any stashed region & orientation."
-  (when (use-region-p)
+  (when (region-active-p)
     (deactivate-mark))
   (if (and evil-god-toggle--visual-beg
            evil-god-toggle--visual-end)
