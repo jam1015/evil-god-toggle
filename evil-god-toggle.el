@@ -34,6 +34,11 @@
 ;;
 ;;; Code:
 
+
+
+
+
+
 (defgroup evil-god-toggle nil
   "Customization group for evil-god-toggle."
   :group 'convenience
@@ -58,6 +63,12 @@ When non-nil, the visual selection will persist."
 When non-nil, the visual selection will persist."
   :type 'boolean
   :group 'evil-god-toggle)
+
+
+(defvar evil-god-toggle--visual-beg nil
+  "Buffer position of region start to restore when toggling back to Evil visual.")
+(defvar evil-god-toggle--visual-end nil
+  "Buffer position of region end to restore when toggling back to Evil visual.")
 
 (require 'evil)
 (require 'god-mode)
@@ -123,7 +134,6 @@ they were removed when god state started"
 (defun evil-god-toggle ()
   "Toggle between God mode and Evil mode.
 Handle visual selections and custom transitions."
-  (message "god-toggle called with evil-state: %s" evil-state)
   (cond
    ;; Handle toggling from God mode to another Evil state
    ((eq evil-state 'god)
@@ -163,9 +173,6 @@ Handle visual selections and custom transitions."
         (remove-hook 'pre-command-hook 'evil-god-fix-last-command))
 
 
-
-
-
 ;; -------------------------------- stop god state and go to a different desired state -----------------
 
 (defun evil-god-toggle-stop-execute-in-god-state (target)
@@ -196,10 +203,50 @@ Handle visual selections and custom transitions."
   (evil-insert-state))
 
 (defun evil-god-toggle-transition-to-visual ()
-"Transition to insert mode and ensure no region is highlighted."
+  "Enter Evil visual state (charwise).
+If `evil-god-toggle--visual-beg/end` are non‑nil, restore that region;
+otherwise select the single char under point (like pressing `v`)."
+  ;; clear any Emacs region
   (when (use-region-p)
     (deactivate-mark))
-  (evil-visual-state))
+  (if (and (bound-and-true-p evil-god-toggle--visual-beg)
+           (bound-and-true-p evil-god-toggle--visual-end))
+      ;; 1) restore stashed region
+      (progn
+        (evil-visual-state)
+        (evil-visual-select
+         evil-god-toggle--visual-beg
+         evil-god-toggle--visual-end
+         'char)
+        (setq evil-god-toggle--visual-beg nil
+              evil-god-toggle--visual-end nil))
+    ;; 2) no region: char‑wise visual like `v`
+    (evil-visual-char)))
+
+
+
+
+(defun evil-god-toggle-stop-choose-state ()
+  "From God, toggle back into Evil either visual or normal.
+If there’s an active Emacs region AND either
+`evil-god-toggle-persist-visual` or
+`evil-god-toggle-persist-visual-to-evil` is non‑nil,
+stash that region (adjusting for Emacs’s exclusive end) and restore visual;
+otherwise go to normal."
+  (interactive)
+  (if (and (use-region-p)
+           (or evil-god-toggle-persist-visual
+               evil-god-toggle-persist-visual-to-evil))
+      (let* ((beg (region-beginning))
+             ;; Emacs’s region-end is one past the last char, so subtract 1
+             (end (1- (region-end))))
+        (setq evil-god-toggle--visual-beg beg
+              evil-god-toggle--visual-end end)
+        (evil-god-toggle-stop-execute-in-god-state "visual"))
+    (evil-god-toggle-stop-execute-in-god-state "normal")))
+
+
+
 
 (provide 'evil-god-toggle)
 ;;; evil-god-toggle.el ends here
