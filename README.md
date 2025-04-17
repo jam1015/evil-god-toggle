@@ -1,80 +1,139 @@
 # evil-god-toggle
 
-A package to seamlessly toggle between
-[evil-mode](https://github.com/emacs-evil/evil) and
-[god-mode](https://github.com/chrisdone/god-mode).
+**Version:** 0.1\
+**Author:** Jordan Mandel (\<jam1015 on GitHub\>)\
+**License:** GPL-3.0-or-later
 
-Inspired by and a heavily modified version of
-[evil-god-state](https://github.com/gridaphobe/evil-god-state)
+## Description
 
-## Background
-
-Evil Mode provides very accurate Vim emulation in Emacs.
-
-God mode modifies Emacs so that it operates as if the control key is being held down at all times, with further input strategies to emulate holding down other modifier keys. In my interpretation this is analogous to normal mode in Vim, where all non-insertion capabilities of the editor are similarly available without holding down modifier keys. Under this interpretation, Emacs Fundamental mode is like Insert Mode in Vim.
-
-I wanted a good way to switch between Evil and God Mode. Evil-God-State does this, making God Mode a mode contained withing Evil Mode (the strategy used by `evil-god-state`, but switches back to Evil mode after one command.  This package makes the change to God-mode persistent, and provides functions to toggle between Evil Mode and God Mode.
-
-
-***TAKE NOTE*** Through the rest of this README God Mode will refer to the sub mode of Evil Mode where God Mode is enabled.  It is a mode in Evil just like Normal Mode or Insert Mode.
+`evil-god-toggle` is an Emacs package that seamlessly toggles between
+`evil-mode` (Vim emulation) and `god-mode` (Emacs modal editing). It
+preserves visual selections optionally, supports both per-buffer and
+global God mode, and provides one-shot or persistent toggles.
 
 ## Installation
 
-Use [straignt.el](https://github.com/radian-software/straight.el) to install from GitHub, or clone this repository and manually add it to your load-path. 
 
-- **TODO**: Get this package on MELPA after community feedback.
+### Use-package (with Elpaca)
 
-## Usage
+```el
+(use-package evil-god-toggle
+  :ensure (:after evil :host github :repo "jam1015/evil-god-toggle")
+  :config
+  (global-set-key (kbd "C-;") #'evil-god-toggle)
+  ;; preserve visual selection when toggling to God
+  (setq evil-god-toggle-persist-visual-to-god t)
+  ;; persist both directions
+  (setq evil-god-toggle-persist-visual t)
+  ;; use global God mode instead of per-buffer
+  (setq evil-god-toggle-global t)
 
-The two functions that the user interacts with are `god-toggle` and `evil-stop-execute-in-god-state`.
+  ;; define God-state keybindings (suggested)
+  (evil-define-key 'god global-map "C-;" #'evil-god-toggle)
+  (evil-define-key 'god global-map [escape] #'evil-god-toggle-stop-choose-state)
+  (evil-define-key '(normal) global-map "," #'evil-god-toggle-once)
+  (evil-define-key 'god global-map (kbd "") #'evil-god-toggle-bail)
 
-### `god-toggle`
+  ;; customize cursors
+  (setq evil-god-state-cursor '(box   "Red"))
+  (setq evil-insert-state-cursor '(bar   "Red"))
+  (setq evil-visual-state-cursor '(hollow "Red"))
+  (setq evil-normal-state-cursor '(hollow "Black")))
+```
 
-Toggles between God Mode and Evil's insert mode, and from Normal Mode into God Mode.
+## Customization Options
 
-It takes the argument: `append`.  The purpose of this argument is to modify what the cursor does when switching from Evil Mode to insert mode and vice-versa, in a way analogout to the differencet between entering insert mode by pressing `a` or `i` in Vim.
+  Variable                                   Default   Description
+  ------------------------------------------ --------- -----------------------------------------------------------------------------------
+  `evil-god-toggle-persist-visual`           `nil`     If non-nil, persist visual selection both to and from God mode.
+  `evil-god-toggle-persist-visual-to-god`    `nil`     If non-nil, persist visual selection when entering God mode.
+  `evil-god-toggle-persist-visual-to-evil`   `nil`     If non-nil, persist visual selection when returning to Evil mode.
+  `evil-god-toggle-global`                   `nil`     If non-nil, use `god-mode-all` (global) instead of `god-local-mode` (per-buffer).
 
-- If Emacs is in Normal mode and `god-toggle` is called, Emacs will enter God Mode and the cursor will remain in the same place. `append` had no effect.
+## Commands
 
+  Command                               Suggested Keybinding                       Description
+  ------------------------------------- -------------------------------- --------------------------------------------------------------------------------------------------------------
+  `evil-god-toggle`                     [C-;]{.kbd}                      Toggle between Evil and God modes (default to Insert state on return).
+  `evil-god-toggle-stop-choose-state`   [ESC]{.kbd} in God state         Return from God to Evil; if visual region active and persistence enabled, restore visual, else Normal state.
+  `evil-god-toggle-once`                [,]{.kbd} in Normal state        Enter God mode for next command only, then revert to Evil.
+  `evil-god-toggle-bail`                [Shift+ESC]{.kbd} in God state   Abort God mode immediately, return to Evil Normal.
 
-- If Emacs is in Evil's insert mode and this function is called, Emacs will go into God Mode.  Further, the motion of the cursor is determined by the global variable `insert-to-god-cursor-strategy`
+## Function Reference
 
-    - `default` (which is in fact the default) (or any value different from the next three options): Same cursor motion as switching from Insert mode to Normal mode in Vim. The cursor is moved one space back. Repeatedly calling `god-toggle` with `append` equal to `nil` will move the cursor backwards each cycle (the same as repeatedly preassing `i` and then `<esc>` over and over in Vim..  Repeatedly calling `god toggle` with `append` non-nil will move the cursor forwards and backwards in the same two positions, which is the same behavior as pressing `a` and `<esc>` over and over in Vim.
+### `evil-god-toggle-start-hook-fun`
 
+Runs on entering God state: removes Evil visual hooks, enables God
+(global or local).
 
-     - `same`: If `append` is `nil` then the cursor remains in the same place. If `append` is non-`nil` then the cursor moves back one space. This means that repeatedly calling the 
+### `evil-god-toggle-stop-hook-fun`
 
-### `evil-stop-execute-in-god-state` (which is also called by `god-toggle`).
+Runs on exiting God state: restores Evil visual hooks, disables God
+(global or local).
 
-## Customization
+### `evil-god-toggle-execute-in-god-state`
 
-### Keybindings
+Internal: prepare last-command, optionally stash region, then enter God
+state.
 
-Customize the keybindings to fit your specific needs. For instance:
+### `evil-god-toggle-fix-last-command`
 
-    (global-set-key (kbd "C-;") (lambda () (interactive) (god-toggle t)))
+Internal: restores `last-command` for seamless Evil command dispatch.
 
-### Entry Strategy
+### `evil-god-toggle-stop-execute-in-god-state`
 
-You can customize the cursor behavior when entering god-mode using
-`god_entry_strategy`. Choices include \"same\", \"toggle\", and
-\"reverse\".
+Internal: leaves God state then calls transition based on `TARGET`.
 
-### Visual Selection
+### `evil-god-toggle-transition-to-normal`, `-to-insert`, `-to-visual`
 
-The package provides options for maintaining visual selection when
-toggling modes. To enable this, set `persist_visual`,
-`persist_visual_to_evil`, and `persist_visual_to_god` to true.
+Perform appropriate Evil state switch, handling region
+activation/deactivation.
 
-### Cursor Appearance
+### `evil-god-toggle-stop-choose-state`
 
-Customize cursor appearance for different states. For example:
+Public: choose Evil state to return to, stashing/restoring visual
+selection if enabled.
 
-    (setq evil-god-state-cursor '(box "Red"))
-    (setq evil-insert-state-cursor '(bar "Red"))
+### `evil-god-toggle-once`
 
-## Best Practices
+Public: momentary God state for a single command, then revert.
 
-If you're well-acquainted with both Vim and Emacs keybindings, this
-package helps you get the best of both worlds. Customize the keybindings
-and other options to fit seamlessly into your workflow.
+### `evil-god-toggle--exit-once`
+
+Internal: triggers exit after the one-shot God command runs.
+
+### `evil-god-toggle-bail`
+
+Public: immediate exit from God mode to Evil Normal, cleaning up hooks.
+
+## Variables
+
+  Variable                                   Description
+  ------------------------------------------ ------------------------------------------------------
+  `evil-god-toggle--visual-beg`              Stashed region start for visual restore.
+  `evil-god-toggle--visual-end`              Stashed region end (inclusive) for visual restore.
+  `evil-god-toggle--visual-forward`          Whether stashed region was forward.
+  `evil-god-toggle-last-command`             Last command before entering God state.
+  `evil-god-toggle-ran-first-evil-command`   Tracks if the first Evil command ran after toggling.
+
+## Hooks and Integration
+
+-   **Starts:** `evil-god-toggle-start-hook-fun` on `:entry-hook` of
+    Evil God state.
+-   **Stops:** `evil-god-toggle-stop-hook-fun` on `:exit-hook` of Evil
+    God state.
+-   `evil-visual-state-entry-hook`:
+    `evil-god-toggle-check-and-update-previous-state-visual` ensures
+    correct `evil-previous-state`.
+
+## Customization Group
+
+All options are under `Customization > evil-god-toggle`.
+
+## License
+
+Licensed under the GNU General Public License v3.0 or later.
+
+## Contributing
+
+Please feel free to complain by opening an issue or be helpful by opening a pull request.
