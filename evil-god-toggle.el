@@ -66,12 +66,13 @@ Possible values are:
   :type 'boolean
   :group 'evil-god-toggle)
 
-
+(defvar evil-god-toggle--origin-buffer nil
+  "Buffer where `evil-god-once-state` was entered, used for safe restoration.")
 (defvar evil-god-toggle--visual-forward nil
   "Non-nil if the saved region was selected forward (mark ≤ point).")
-(defvar evil-god-toggle--visual-beg nil
+(defvar-local evil-god-toggle--visual-beg nil
   "Buffer position of region start to restore when toggling back to Evil visual.")
-(defvar evil-god-toggle--visual-end nil
+(defvar-local evil-god-toggle--visual-end nil
   "Buffer position of region end to restore when toggling back to Evil visual.")
 
 (require 'evil)
@@ -91,10 +92,11 @@ Possible values are:
   "God state (once)."
   :tag " <G (once)> "
   :message "-- GOD MODE (once) --"
-  :entry-hook (evil-god-toggle-start-hook-fun)
-  :exit-hook (evil-god-toggle-stop-hook-fun)
+  :entry-hook (evil-god-toggle-once-start-hook-fun)
+  :exit-hook (evil-god-toggle-once-stop-hook-fun)
   :input-method t
   :intercept-esc nil)
+
 
 (evil-define-state god-off
   "God state (off)."
@@ -136,12 +138,8 @@ previous state."
     (with-current-buffer buf
       (when (and (bound-and-true-p evil-local-mode)
                  evil-god-toggle--hooks-removed)
-        (dolist (hook '((activate-mark-hook . evil-visual-activate-hook)
-                        (deactivate-mark-hook . evil-visual-deactivate-hook)))
-          (let ((hook-sym (car hook))
-                (fn       (cdr hook)))
-            (unless (member fn (symbol-value hook-sym))
-              (add-hook hook-sym fn nil t))))
+        (add-hook 'activate-mark-hook   'evil-visual-activate-hook   nil t)
+        (add-hook 'deactivate-mark-hook 'evil-visual-deactivate-hook nil t)
         (setq evil-god-toggle--hooks-removed nil)))))
 
 
@@ -171,6 +169,35 @@ previous state."
   ;; restore visual hooks, then turn off God
   (evil-god-toggle--restore-visual-hooks )
   (evil-god-toggle--disable-god))
+
+
+
+
+
+(defun evil-god-toggle-once-start-hook-fun ()
+  "Run before entering `evil-god-once-state'."
+    (setq evil-god-toggle--origin-buffer (current-buffer))
+    (add-hook 'pre-command-hook #'evil-god-toggle-fix-last-command)
+    (add-hook 'post-command-hook #'evil-god-toggle--exit-once)
+  (when (or (member #'evil-visual-activate-hook activate-mark-hook)
+          (member #'evil-visual-deactivate-hook deactivate-mark-hook))
+  (remove-hook 'activate-mark-hook 'evil-visual-activate-hook t)
+  (remove-hook 'deactivate-mark-hook 'evil-visual-deactivate-hook t)
+  (setq evil-god-toggle--hooks-removed t))
+  ;; either global or local God
+  (if evil-god-toggle-global
+      (god-mode-all 1)   ; turn on God everywhere
+    (god-local-mode 1)))
+
+(defun evil-god-toggle-once-stop-hook-fun ()
+  "Run before exiting `evil-god-once-state’."
+  ;; restore visual hooks, then turn off God
+  (remove-hook 'pre-command-hook  #'evil-god-toggle-fix-last-command)
+  (remove-hook 'post-command-hook #'evil-god-toggle--exit-once)
+  (evil-god-toggle--restore-visual-hooks )
+  (evil-god-toggle--disable-god))
+
+
 
 
 
@@ -309,7 +336,6 @@ If there’s an active region AND either persist‑visual flag is t,
 stash its bounds **and** direction, then call visual; else normal."
   (interactive)
   (if (and (use-region-p)  (memq evil-god-toggle-persist-visual '(always to-evil))) ;; only if a region is selected
-           
       (let* ((m       (mark))
              (p       (point))
              (beg     (min m p))
@@ -318,48 +344,32 @@ stash its bounds **and** direction, then call visual; else normal."
              (forward (<= m p)))                ; mark before point?
         (setq evil-god-toggle--visual-beg     beg
               evil-god-toggle--visual-end     end
-              evil-god-toggle--visual-forward forward))
+              evil-god-toggle--visual-forward forward)(evil-god-toggle-stop-execute-in-god-state 'visual))
     (evil-god-toggle-stop-execute-in-god-state alternate_target)))
 
 
 
-;;;###autoload
+
 (defun evil-god-toggle-once ()
-  "Enter God state for exactly the next command, then return to Evil."
   (interactive)
   (if (minibufferp)
-      (user-error "Cannot enter God mode from minibuffer")
-    ;; preserve last-command so the next command still behaves like Evil
-    (add-hook 'pre-command-hook #'evil-god-toggle-fix-last-command nil t)
-    ;; after that one real command, clean up and switch back
-    (add-hook 'post-command-hook #'evil-god-toggle--exit-once nil t)
-    ;; enter God
-    (evil-god-once-state)
-    ))
+      (user-error "Cannot enter God-once mode from minibuffer")
+    (evil-god-once-state)))
 
 (defun evil-god-toggle--exit-once ()
-  "Internal: exit God state once a non‑prefix command has run."
+  "Exit `god-once` state and return to Evil's previous state, or `normal` if ambiguous."
   (let ((cmd this-command))
-    (unless (or
-             ;; skip our own entry command
-             (eq cmd #'evil-god-toggle-once)
-             ;; skip any original `evil-execute-in-god-state`
-             (eq cmd #'evil-god-toggle-execute-in-god-state)
-             ;; skip prefix args
-             (memq cmd '(universal-argument
-                         universal-argument-minus
-                         universal-argument-more
-                         universal-argument-other-key
-                         digit-argument
-                         negative-argument))
-             ;; skip in the minibuffer
-             (minibufferp))
-      ;; tear down hooks
-      (remove-hook 'pre-command-hook  #'evil-god-toggle-fix-last-command t)
-      (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t)
-      ;; run your normal exit hook and go to normal state
-      (evil-god-toggle-stop-hook-fun)
-      (evil-normal-state))))
+    (unless (or (eq cmd #'evil-god-toggle-once)
+                (memq cmd '(universal-argument digit-argument))
+                (minibufferp))
+      ;; turn off God mode and restore previous state
+      (let* ((raw-target (or (cdr (assq 'god-once evil-previous-state-alist))
+                             evil-previous-state
+                             'normal))
+             (target (if (memq raw-target '(god god-once god-off nil))
+                         'normal
+                       raw-target)))
+        (evil-change-state target)))))
 
 ;;;###autoload
 (defun evil-god-toggle-bail ()
