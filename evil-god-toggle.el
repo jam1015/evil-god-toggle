@@ -318,8 +318,7 @@ stash its bounds **and** direction, then call visual; else normal."
              (forward (<= m p)))                ; mark before point?
         (setq evil-god-toggle--visual-beg     beg
               evil-god-toggle--visual-end     end
-              evil-god-toggle--visual-forward forward)
-        (evil-god-toggle-stop-execute-in-god-state 'normal))
+              evil-god-toggle--visual-forward forward))
     (evil-god-toggle-stop-execute-in-god-state alternate_target)))
 
 
@@ -335,10 +334,8 @@ stash its bounds **and** direction, then call visual; else normal."
     ;; after that one real command, clean up and switch back
     (add-hook 'post-command-hook #'evil-god-toggle--exit-once nil t)
     ;; enter God
-    (if evil-god-toggle-global
-        (god-mode-all 1)
-      (god-local-mode 1))
-    (message "-- GOD MODE (next cmd only) --")))
+    (evil-god-once-state)
+    ))
 
 (defun evil-god-toggle--exit-once ()
   "Internal: exit God state once a non‑prefix command has run."
