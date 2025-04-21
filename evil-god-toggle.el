@@ -40,29 +40,6 @@
 ;;; Code:
 (provide 'evil-god-toggle)
 
-
-;;;###autoload
-(defun evil-god-toggle ()
-  "Toggle between God mode and Evil mode.
-Handle visual selections and custom transitions."
-  (interactive)
-  (if (minibufferp)
-      (user-error "Cannot enter God mode from minibuffer")
-    (cond
-     ;; Handle toggling from God mode to another Evil state
-     ((eq evil-state 'god)
-        (evil-god-toggle-execute-in-god-off-state))
-     ;; Default case for any other states
-     (t (evil-god-toggle-execute-in-god-state)))))
-
-;;;###autoload
-(defun evil-god-toggle-once ()
-  "Enter God mode for exactly one command, then return to Evil."
-  (interactive)
-  (if (minibufferp)
-      (user-error "Cannot enter God-once mode from minibuffer")
-    (evil-god-once-state)))
-
 ;;;###autoload
 (evil-define-state god
   "God state." :tag " <G> "
@@ -87,7 +64,32 @@ Handle visual selections and custom transitions."
   :exit-hook  #'evil-god-toggle--off-stop-hook-fun
   :input-method t :intercept-esc nil)
 
+;;;###autoload
+(defun evil-god-toggle ()
+  "Toggle between God mode and Evil mode.
+Handle visual selections and custom transitions."
+  (interactive)
+  (if (minibufferp)
+      (user-error "Cannot enter God mode from minibuffer")
+    (cond
+     ;; Handle toggling from God mode to another Evil state
+     ((eq evil-state 'god)
+        (evil-god-toggle-execute-in-god-off-state))
+     ;; Default case for any other states
+     (t (evil-god-toggle-execute-in-god-state)))))
 
+
+;;;###autoload
+(defun evil-god-toggle--once ()
+  "Enter God mode for exactly one command, then return to Evil.
+If already in `god-once`, signal a user-error."  
+  (interactive)
+  (cond
+   ((minibufferp)
+    (user-error "Cannot enter God-once mode from minibuffer"))
+   ((eq evil-state 'god-once)
+    (user-error "Already in God-once state"))
+   (t (evil-god-once-state))))
 
 
 (with-eval-after-load 'evil
@@ -139,8 +141,6 @@ Handle visual selections and custom transitions."
 
 (require 'evil)
 (require 'god-mode)
-
-
 
 
 (defun evil-god-toggle--remove-transient-hooks ()
@@ -224,7 +224,7 @@ previous state."
   ;; either global or local God
   (evil-god-toggle--enable-god))
 
-(defun evil-god-toggle-stop-hook-fun ()
+(defun evil-god-toggle--stop-hook-fun ()
   "Run before exiting `evil-god-state’."
   ;; restore visual hooks, then turn off God
   (evil-god-toggle--restore-visual-hooks )
@@ -253,7 +253,7 @@ previous state."
 
 
 
-(defun evil-god-toggle-once-stop-hook-fun ()
+(defun evil-god-toggle--once-stop-hook-fun ()
   "Run before exiting `evil-god-once-state’."
   ;; restore visual hooks, then turn off God
   (evil-god-toggle--remove-transient-hooks)
@@ -265,23 +265,19 @@ previous state."
 
 
 ;;  god mode (off) hooks ------------------------
-(defun evil-god-off-toggle-start-hook-fun ()
+(defun evil-god-toggle--off-start-hook-fun ()
   "Run before entering `evil-god-off-state'."
   (evil-god-toggle--remove-visual-hooks)
   ;; either global or local God
   (evil-god-toggle--disable-god))
 
 
-(defun evil-god-off-toggle-stop-hook-fun ()
+(defun evil-god-toggle--off-stop-hook-fun ()
   "Run before exiting `evil-god-off-state’."
   ;; same cleanup for God‑off exit
   (evil-god-toggle--restore-visual-hooks )
   (evil-god-toggle--disable-god))
 
-
-
-
-;;------------------------------ the actual toggle function -----------------------------------
 
 
 
@@ -311,11 +307,15 @@ previous state."
         (add-hook 'deactivate-mark-hook 'evil-visual-deactivate-hook nil t))
 
 (defun evil-god-toggle-execute-in-god-off-state ()
-  "Exit God mode, optionally restoring visual selection."
+  "Exit God mode (force God-off), optionally restoring visual selection.
+If called from the minibuffer, signal a user-error."  
   (interactive)
-  (evil-god-toggle--add-transient-hooks t nil)
-  (setq evil-god-toggle-last-command last-command)
-  (evil-god-toggle--maybe-restore-visual #'evil-god-off-state))
+  (if (minibufferp)
+      (user-error "Cannot enter God-off mode from minibuffer")
+    ;; original behavior
+    (evil-god-toggle--add-transient-hooks t nil)
+    (setq evil-god-toggle-last-command last-command)
+    (evil-god-toggle--maybe-restore-visual #'evil-god-off-state)))
 
 
 ;; ------------------------ actually execute in god state --------------------------------
@@ -400,7 +400,7 @@ stash its bounds **and** direction, then call visual; else normal."
 
 
 ;;;###autoload
-(defun evil-god-toggle-once ()
+(defun evil-god-toggle--once ()
   (interactive)
   (if (minibufferp)
       (user-error "Cannot enter God-once mode from minibuffer")
@@ -410,7 +410,7 @@ stash its bounds **and** direction, then call visual; else normal."
   "Exit `god-once` state and return to Evil's previous state, or `normal` if ambiguous."
   (evil-god-toggle--remove-transient-hooks)
   (let ((cmd this-command))
-    (unless (or (eq cmd #'evil-god-toggle-once)
+    (unless (or (eq cmd #'evil-god-toggle--once)
                 (memq cmd '(universal-argument digit-argument))
                 (minibufferp))
       ;; turn off God mode and restore previous state
@@ -429,7 +429,7 @@ stash its bounds **and** direction, then call visual; else normal."
   ;; clean up any one‑shot hooks
   (evil-god-toggle--remove-transient-hooks)
   ;; exit God
-  (evil-god-toggle-stop-hook-fun)
+  (evil-god-toggle--stop-hook-fun)
   (evil-normal-state)
   (message "-- Aborted God mode --"))
 
