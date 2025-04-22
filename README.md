@@ -9,10 +9,9 @@
 [`god-mode`](https://github.com/emacsorphanage/god-mode) (Emacs modal editing).
  `god-mode` becomes a submode of Evil on the same level as any other mode (insert, visual, etc)
 
+## TLDR
 
-
-
-
+[Here](https://github.com/jam1015/evil-god-toggle?tab=readme-ov-file#installationconfiguration) is an example installation and configuation 
 
 ## Motivation
 
@@ -115,7 +114,7 @@ any God state or in the minibuffer.
 for a single command (e.g. one control‑key chord) without having to
 remember to toggle back themselves.
 
-## `evil-god-toggle--bail`
+### `evil-god-toggle--bail`
 
 **Arguments:** None (interactive)
 
@@ -130,7 +129,7 @@ finds themselves stuck in God mode they can instantly return to standard
 Evil behavior.
 
 
-## Customizations
+### Customizations
 
 All of the following variables live in the `evil-god-toggle`
 customization group.
@@ -222,6 +221,11 @@ The author of this plugin uses [Elpaca](https://github.com/progfolio/elpaca/) to
 **Author:** [Jordan Mandel](https://github.com/jam1015/)
 **License:** GPL-3.0-or-later
 Licensed under the GNU General Public License v3.0 or later.
+
+## TODO
+
+- Implement proper testing
+- Get on MELPA
 
 ## Contributing
 
