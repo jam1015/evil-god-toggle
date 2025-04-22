@@ -1,9 +1,9 @@
 ;;; evil-god-toggle.el --- Toggle between Evil and God Modes -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2023 Jordan Mandel
+;; Copyright (C) 2025 Jordan Mandel
 ;; Author: Jordan Mandel <jordan.mandel@live.com>
-;; Created: 2023 Summer
-;; Version: 0.1
+;; Created: 2025-04-22
+;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24.1") (evil "1.0.8") (god-mode "2.12.0"))
 ;; Keywords: convenience, emulation, evil, god-mode
 ;; URL: https://github.com/jam1015/evil-god-toggle
@@ -53,23 +53,6 @@
 (require 'evil)
 (require 'god-mode)
 
-;;(declare-function evil-god-toggle--execute-in-god-off-state "evil-god-toggle")
-;;(declare-function evil-god-toggle--execute-in-god-state "evil-god-toggle")
-;;(declare-function evil-god-toggle--fix-last-command "evil-god-toggle")
-;;(declare-function evil-god-toggle--exit-once "evil-god-toggle")
-;;(declare-function evil-god-toggle--add-visual-hooks "evil-god-toggle")
-;;(declare-function evil-god-toggle--enable-god "evil-god-toggle")
-;;(declare-function evil-god-toggle--disable-god          "evil-god-toggle")
-;;(declare-function evil-god-toggle--add-transient-hooks  "evil-god-toggle")
-;;(declare-function evil-god-toggle--remove-transient-hooks "evil-god-toggle")
-;;(declare-function evil-god-toggle--maybe-restore-visual "evil-god-toggle")
-;;(declare-function evil-god-toggle--remove-visual-hooks  "evil-god-toggle")
-;;(declare-function evil-god-toggle--transition-to-normal  "evil-god-toggle")
-;;(declare-function evil-god-toggle--transition-to-insert  "evil-god-toggle")
-;;(declare-function evil-god-toggle--transition-to-visual  "evil-god-toggle")
-;;(declare-function evil-god-toggle--stop-hook-fun  "evil-god-toggle")
-;;(declare-function evil-god-toggle--stop-execute-in-god-state  "evil-god-toggle")
-;;(declare-function evil-god-toggle--restore-visual-hooks  "evil-god-toggle")
 
 ;;;###autoload
 (defun evil-god-toggle ()
@@ -83,7 +66,7 @@ Handle visual selections and custom transitions."
      ((eq evil-state 'god)
      (evil-god-toggle--execute-in-god-off-state))
      ;;;; Default case for any other states
-     (t () (evil-god-toggle--execute-in-god-state)
+     (t (evil-god-toggle--execute-in-god-state)
        )
      )
     )
@@ -337,6 +320,7 @@ previous state."
         (add-hook 'activate-mark-hook   'evil-visual-activate-hook   nil t)
         (add-hook 'deactivate-mark-hook 'evil-visual-deactivate-hook nil t))
 
+;;;###autoload
 (defun evil-god-toggle--execute-in-god-off-state ()
   "Exit God mode (force God-off), optionally restoring visual selection.
 If called from the minibuffer, signal a user-error."  
@@ -349,7 +333,6 @@ If called from the minibuffer, signal a user-error."
     (evil-god-toggle--maybe-restore-visual 'evil-god-off-state)))
 
 
-;; ------------------------ actually execute in god state --------------------------------
 
 ;;;###autoload
 (defun evil-god-toggle--execute-in-god-state ()
@@ -362,7 +345,6 @@ If called from the minibuffer, signal a user-error."
 
 
 
-;; -------------------------------- stop god state and go to a different desired state -----------------
 
 (defun evil-god-toggle--stop-execute-in-god-state (target)
   "Wrapper for leaving god state and switching to another Evil state based on TARGET.
@@ -460,15 +442,5 @@ stash its bounds **and** direction, then call visual; else normal."
   (evil-god-toggle--stop-hook-fun)
   (evil-normal-state)
   (message "-- Aborted God mode --"))
-
-
-
-
-
-
-
-
-
-
 
 ;;; evil-god-toggle.el ends here
