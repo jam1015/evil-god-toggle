@@ -49,7 +49,7 @@ The third bullet in that section point goes over how
 [`evil-god-state`](https://github.com/gridaphobe/evil-god-state) creates a
 state of evil-mode dedicated to god-mode that lasts for one command.  This
 package extends that by creating a persistent state of Evil dedicated completely
-to `god-mode`, while also including a one-off god state similar to `evil-god-state`
+to `god-mode`, while also including a one-off god state similar to `evil-god-state`.
 
 
 ## New Emacs Minor Mode Introduced
