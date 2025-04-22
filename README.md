@@ -228,12 +228,12 @@ The author of this plugin uses [Elpaca](https://github.com/progfolio/elpaca/) to
 
 
 
-## License
+## Version/License
 
-**Version:** 0.1.0
-**Author:** [Jordan Mandel](https://github.com/jam1015/)
-**License:** GPL-3.0-or-later
-Licensed under the GNU General Public License v3.0 or later.
+- **Version:** 0.1.0
+- **Author:** [Jordan Mandel](https://github.com/jam1015/)
+- **License:** GPL-3.0-or-later
+
 
 ## TODO
 
