@@ -42,8 +42,10 @@ to `god-mode`, while also including a one-off god state similar to `evil-god-sta
 
 
 ## New Emacs Minor Mode Introduced
- `evil-god-toggle-mode` 
- Mode that contains the map to which the user should assign all keymaps to commands introduced in this package.
+
+`evil-god-toggle-mode`
+
+Mode that contains the map to which the user should assign all keymaps to commands introduced in this package.
 
 ## New Evil Modes Introduced
 

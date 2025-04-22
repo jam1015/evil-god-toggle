@@ -80,9 +80,6 @@ Handle visual selections and custom transitions."
 
 
 
-
-
-
 (evil-define-state god
   "God state." :tag " <G> "
   :message "-- GOD MODE --"
@@ -194,8 +191,6 @@ previous state."
 
 
 
-;;;;; helper functions ;;;;;;
-
 
 (defun evil-god-toggle--restore-visual-hooks ()
   "Re-add Evil visual activate/deactivate hooks where they were previously removed."
@@ -219,7 +214,6 @@ previous state."
       (god-mode-all 1)
     (god-local-mode 1)))
 
-;;  god mode hooks ------------------------
 
 (defun evil-god-toggle--start-hook-fun ()
   "Run before entering `evil-god-state'."
@@ -244,8 +238,6 @@ previous state."
         (setq last-command evil-god-toggle--last-command)
         (remove-hook 'pre-command-hook 'evil-god-toggle--fix-last-command)
         )
-
-
 
 (defun evil-god-toggle--once-start-hook-fun ()
   "Run before entering `evil-god-once-state'."
@@ -272,9 +264,6 @@ previous state."
 
 
 
-
-
-;;  god mode (off) hooks ------------------------
 (defun evil-god-toggle--off-start-hook-fun ()
   "Run before entering `evil-god-off-state'."
   (evil-god-toggle--remove-visual-hooks)
@@ -423,27 +412,6 @@ If already in `god-once`, signal a user-error."
    (t (evil-god-once-state))))
 
 
-;;(defun evil-stop-execute-in-god-state ()
-;;  "Switch back to previous evil state."
-;;  (unless (or (eq this-command #'evil-execute-in-god-state)
-;;              (eq this-command #'universal-argument)
-;;              (eq this-command #'universal-argument-minus)
-;;              (eq this-command #'universal-argument-more)
-;;              (eq this-command #'universal-argument-other-key)
-;;              (eq this-command #'digit-argument)
-;;              (eq this-command #'negative-argument)
-;;              (minibufferp))
-;;    (remove-hook 'pre-command-hook 'evil-god-fix-last-command)
-;;    (remove-hook 'post-command-hook 'evil-stop-execute-in-god-state)
-;;    (when (buffer-live-p evil-execute-in-god-state-buffer)
-;;      (with-current-buffer evil-execute-in-god-state-buffer
-;;        (if (and (eq evil-previous-state 'visual)
-;;                 (not (use-region-p)))
-;;            (progn
-;;              (evil-change-to-previous-state)
-;;              (evil-exit-visual-state))
-;;          (evil-change-to-previous-state))))
-;;    (setq evil-execute-in-god-state-buffer nil)))
 
 (defun evil-god-toggle--exit-once ()
   "Exit `god-once` state and return to Evil's previous state, or `normal` if ambiguous."
