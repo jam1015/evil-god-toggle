@@ -100,7 +100,7 @@ Otherwise, switches into the specified `alternate_target` Evil state.
 Evil when I leave God?", handling visual‑selection persistence or
 falling back to normal/insert states.
 
-## evil-god-toggle--once
+## `evil-god-toggle--once`
 
 **Arguments:** None (interactive)
 
@@ -116,7 +116,7 @@ any God state or in the minibuffer.
 for a single command (e.g. one control‑key chord) without having to
 remember to toggle back themselves.
 
-## evil-god-toggle--bail
+## `evil-god-toggle--bail`
 
 **Arguments:** None (interactive)
 
