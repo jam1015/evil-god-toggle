@@ -234,6 +234,7 @@ previous state."
 (defun evil-god-toggle--stop-hook-fun ()
   "Run before exiting `evil-god-state’."
   ;; restore visual hooks, then turn off God
+  (evil-god-toggle--remove-transient-hooks)
   (evil-god-toggle--restore-visual-hooks )
   (evil-god-toggle--disable-god))
 
@@ -388,7 +389,8 @@ TARGET should be a symbol: 'normal, 'insert, or 'visual."
 
 ;;;###autoload
 (defun evil-god-toggle--stop-choose-state (alternate_target)
-  "From God, toggle back into Evil, restoring visual or going to normal.
+  "From God, toggle back into Evil, restoring visual or going to state specified by 'alternate_target'.
+Alternate_target can be 'normal 'insert or 'visual .
 If there’s an active region AND either persist‑visual flag is t,
 stash its bounds **and** direction, then call visual; else normal."
   (interactive)
@@ -445,7 +447,6 @@ If already in `god-once`, signal a user-error."
 
 (defun evil-god-toggle--exit-once ()
   "Exit `god-once` state and return to Evil's previous state, or `normal` if ambiguous."
-  ;;(evil-god-toggle--remove-transient-hooks)
   (let ((cmd this-command)
         (entry-cmd 'evil-god-once-state))
     (unless (memq cmd
@@ -480,11 +481,10 @@ If already in `god-once`, signal a user-error."
 (defun evil-god-toggle--bail ()
   "Abort any God state immediately and return to Evil normal."
   (interactive)
-  ;; clean up any one‑shot hooks
-  (evil-god-toggle--remove-transient-hooks)
   ;; exit God
   (evil-god-toggle--stop-hook-fun)
   (evil-normal-state)
-  (message "-- Aborted God mode --"))
+  ;;(message "-- Aborted God mode --")
+  )
 
 ;;; evil-god-toggle.el ends here
