@@ -182,7 +182,7 @@ The author of this plugin uses [Elpaca](https://github.com/progfolio/elpaca/) to
 (use-package evil-god-toggle
   :ensure (:host github
                  :repo "jam1015/evil-god-toggle"
-                 :after evil)
+                 :after (evil god))
   :config
   ;; 1) Enable the global minor mode (so its keymap + lighter are active)
   (evil-god-toggle-mode 1)
