@@ -53,23 +53,23 @@
 (require 'evil)
 (require 'god-mode)
 
-(declare-function evil-god-toggle--execute-in-god-off-state "evil-god-toggle")
-(declare-function evil-god-toggle--execute-in-god-state "evil-god-toggle")
-(declare-function evil-god-toggle--fix-last-command "evil-god-toggle")
-(declare-function evil-god-toggle--exit-once "evil-god-toggle")
-(declare-function evil-god-toggle--add-visual-hooks "evil-god-toggle")
-(declare-function evil-god-toggle--enable-god "evil-god-toggle")
-(declare-function evil-god-toggle--disable-god          "evil-god-toggle")
-(declare-function evil-god-toggle--add-transient-hooks  "evil-god-toggle")
-(declare-function evil-god-toggle--remove-transient-hooks "evil-god-toggle")
-(declare-function evil-god-toggle--maybe-restore-visual "evil-god-toggle")
-(declare-function evil-god-toggle--remove-visual-hooks  "evil-god-toggle")
-(declare-function evil-god-toggle--transition-to-normal  "evil-god-toggle")
-(declare-function evil-god-toggle--transition-to-insert  "evil-god-toggle")
-(declare-function evil-god-toggle--transition-to-visual  "evil-god-toggle")
-(declare-function evil-god-toggle--stop-hook-fun  "evil-god-toggle")
-(declare-function evil-god-toggle--stop-execute-in-god-state  "evil-god-toggle")
-(declare-function evil-god-toggle--restore-visual-hooks  "evil-god-toggle")
+;;(declare-function evil-god-toggle--execute-in-god-off-state "evil-god-toggle")
+;;(declare-function evil-god-toggle--execute-in-god-state "evil-god-toggle")
+;;(declare-function evil-god-toggle--fix-last-command "evil-god-toggle")
+;;(declare-function evil-god-toggle--exit-once "evil-god-toggle")
+;;(declare-function evil-god-toggle--add-visual-hooks "evil-god-toggle")
+;;(declare-function evil-god-toggle--enable-god "evil-god-toggle")
+;;(declare-function evil-god-toggle--disable-god          "evil-god-toggle")
+;;(declare-function evil-god-toggle--add-transient-hooks  "evil-god-toggle")
+;;(declare-function evil-god-toggle--remove-transient-hooks "evil-god-toggle")
+;;(declare-function evil-god-toggle--maybe-restore-visual "evil-god-toggle")
+;;(declare-function evil-god-toggle--remove-visual-hooks  "evil-god-toggle")
+;;(declare-function evil-god-toggle--transition-to-normal  "evil-god-toggle")
+;;(declare-function evil-god-toggle--transition-to-insert  "evil-god-toggle")
+;;(declare-function evil-god-toggle--transition-to-visual  "evil-god-toggle")
+;;(declare-function evil-god-toggle--stop-hook-fun  "evil-god-toggle")
+;;(declare-function evil-god-toggle--stop-execute-in-god-state  "evil-god-toggle")
+;;(declare-function evil-god-toggle--restore-visual-hooks  "evil-god-toggle")
 
 ;;;###autoload
 (defun evil-god-toggle ()
@@ -81,9 +81,13 @@ Handle visual selections and custom transitions."
     (cond
      ;; Handle toggling from God mode to another Evil state
      ((eq evil-state 'god)
-        (evil-god-toggle--execute-in-god-off-state))
-     ;; Default case for any other states
-     (t (evil-god-toggle--execute-in-god-state)))))
+     (evil-god-toggle--execute-in-god-off-state))
+     ;;;; Default case for any other states
+     (t () (evil-god-toggle--execute-in-god-state)
+       )
+     )
+    )
+  )
 
 
 ;;;###autoload
@@ -104,22 +108,22 @@ If already in `god-once`, signal a user-error."
 (evil-define-state god
   "God state." :tag " <G> "
   :message "-- GOD MODE --"
-  :entry-hook #'evil-god-toggle--start-hook-fun
-  :exit-hook  #'evil-god-toggle--stop-hook-fun
+  :entry-hook ( evil-god-toggle--start-hook-fun )
+  :exit-hook  ( evil-god-toggle--stop-hook-fun )
   :input-method t :intercept-esc nil)
 
 (evil-define-state god-once
   "God state (once)." :tag " <G (once)> "
   :message "-- GOD MODE (once) --"
-  :entry-hook #'evil-god-toggle--once-start-hook-fun
-  :exit-hook  #'evil-god-toggle--once-stop-hook-fun
+  :entry-hook ( evil-god-toggle--once-start-hook-fun )
+  :exit-hook  ( evil-god-toggle--once-stop-hook-fun )
   :input-method t :intercept-esc nil)
 
 (evil-define-state god-off
   "God state (off)." :tag " <G (off)> "
   :message "-- GOD MODE (OFF) --"
-  :entry-hook #'evil-god-toggle--off-start-hook-fun
-  :exit-hook  #'evil-god-toggle--off-stop-hook-fun
+  :entry-hook ( evil-god-toggle--off-start-hook-fun )
+  :exit-hook  ( evil-god-toggle--off-stop-hook-fun )
   :input-method t :intercept-esc nil)
 
   ;; Customization group
@@ -247,7 +251,8 @@ previous state."
     (evil-god-toggle--remove-visual-hooks)
   )
   ;; either global or local God
-  (evil-god-toggle--enable-god))
+  (evil-god-toggle--enable-god)
+  )
 
 (defun evil-god-toggle--stop-hook-fun ()
   "Run before exiting `evil-god-state’."
@@ -313,10 +318,11 @@ previous state."
            (memq evil-god-toggle-persist-visual '(always to-god)))
       (let ((mrk (mark))
             (pnt (point)))
+
         (funcall next-state-fn)
         (set-mark mrk)
         (goto-char pnt))
-    (funcall next-state-fn)))
+    ( funcall next-state-fn)))
 
 
 
@@ -340,16 +346,19 @@ If called from the minibuffer, signal a user-error."
     ;; original behavior
     (evil-god-toggle--add-transient-hooks t nil)
     (setq evil-god-toggle--last-command last-command)
-    (evil-god-toggle--maybe-restore-visual #'evil-god-off-state)))
+    (evil-god-toggle--maybe-restore-visual 'evil-god-off-state)))
 
 
 ;; ------------------------ actually execute in god state --------------------------------
+
+;;;###autoload
 (defun evil-god-toggle--execute-in-god-state ()
   "Go into God state, preserving visual selection if configured."
   (interactive)
   (setq evil-god-toggle--last-command last-command)
   (evil-god-toggle--add-transient-hooks t nil)
-  (evil-god-toggle--maybe-restore-visual #'evil-god-state))
+  (evil-god-toggle--maybe-restore-visual  'evil-god-state )
+  )
 
 
 
