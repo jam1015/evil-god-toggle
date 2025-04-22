@@ -1,16 +1,16 @@
 # evil-god-toggle
 
-[Description](#description)
-[TL;DR](#tldr)
-[Motivation](#motivation)
-[New Emacs Minor Mode Introduced](#new-emacs-minor-mode-introduced)
-[New Evil States Introduced](#new-evil-states-introduced)
-[User-facing Functions](#user-facing-functions)
-[Customizations](#customizations)
-[Installation / Configuration](#installation--configuration)
-[License](#license)
-[TODO](#todo)
-[Contributing](#contributing)
+- [Description](#description)
+- [TL;DR](#tldr)
+- [Motivation](#motivation)
+- [New Emacs Minor Mode Introduced](#new-emacs-minor-mode-introduced)
+- [New Evil States Introduced](#new-evil-states-introduced)
+- [User-facing Functions](#user-facing-functions)
+- [Customizations](#customizations)
+- [Installation / Configuration](#installation--configuration)
+- [License](#license)
+- [TODO](#todo)
+- [Contributing](#contributing)
 
 
 ## Description
