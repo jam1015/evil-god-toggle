@@ -111,7 +111,7 @@ Otherwise, switches into the specified `alternate_target` Evil state.
 Evil when I leave God?", handling visual‑selection persistence or
 falling back to normal/insert states.
 
-## `evil-god-toggle--once`
+### `evil-god-toggle--once`
 
 **Arguments:** None (interactive)
 
