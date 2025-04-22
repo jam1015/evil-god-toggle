@@ -1,6 +1,7 @@
 # evil-god-toggle
 
-**Version:** 0.1.0\ **Author:** Jordan Mandel (\<jam1015 on GitHub\>)\
+**Version:** 0.1.0
+**Author:** [Jordan Mandel](https://github.com/jam1015/)
 **License:** GPL-3.0-or-later
 
 
@@ -41,7 +42,7 @@ to `god-mode`, while also including a one-off god state similar to `evil-god-sta
 
 
 ## New Emacs Minor Mode Introduced
-- `evil-god-toggle-mode` 
+ `evil-god-toggle-mode` 
  Mode that contains the map to which the user should assign all keymaps to commands introduced in this package.
 
 ## New Evil Modes Introduced
