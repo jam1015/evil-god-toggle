@@ -184,40 +184,40 @@ The author of this plugin uses [Elpaca](https://github.com/progfolio/elpaca/) to
                  :repo "jam1015/evil-god-toggle"
                  :after (evil god))
   :config
-  ;; 1) Enable the global minor mode (so its keymap + lighter are active)
+  ;; Enable the global minor mode (so its keymap + lighter are active)
   (evil-god-toggle-mode 1)
 
-  ;; 2) Core toggle binding in the minor-mode’s keymap
+  ;; Core toggle binding in the minor-mode’s keymap
   (define-key evil-god-toggle-mode-map (kbd "C-;")
     #'evil-god-toggle--god)
 
-  ;; 3) Bind escape from god mode to take you to evil normal mode
+  ;; Bind escape from god mode to take you to evil normal mode
   (evil-define-key 'god
     evil-god-toggle-mode-map
     [escape] (lambda () (interactive)
                (evil-god-toggle--stop-choose-state 'normal)))
 
-  ;; 4) Bind escape from god-off mode to take you to evil insert mode
+  ;; Bind escape from god-off mode to take you to evil insert mode
   (evil-define-key 'god-off
     evil-god-toggle-mode-map
     [escape] (lambda () (interactive)
                (evil-god-toggle--stop-choose-state 'insert)))
 
-  ;; 5) Bind  shift+escape to bail from god-off-mode 
+  ;; Bind  shift+escape to bail from god-off-mode 
   (evil-define-key 'god-off
     evil-god-toggle-mode-map
     (kbd "<S-escape>") #'evil-god-toggle-bail)
 
-  ;; 6) bind comma in  evil normal mode to initiate a once-off god mode command
+  ;; Bind comma in  evil normal mode to initiate a once-off god mode command
   (evil-define-key 'normal
     evil-god-toggle-mode-map
     "," #'evil-god-toggle--once)
 
-  ;; 7) Your visual‑persistence and global flag settings
+  ;; Your visual‑persistence and global flag settings
   (setq evil-god-toggle-persist-visual 'always
         evil-god-toggle-global        nil)
 
-  ;; 8) Optional: customize your cursors per state
+  ;; Customize your cursors per state
   (setq evil-god-state-cursor       '(box    "Red")
         evil-god-off-state-cursor   '(bar    "Green")
         evil-insert-state-cursor    '(bar    "Red")
