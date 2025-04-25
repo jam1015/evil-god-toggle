@@ -22,7 +22,7 @@
 
 ## TLDR
 
-[Here](https://github.com/jam1015/evil-god-toggle?tab=readme-ov-file#installationconfiguration) is an example installation and configuation 
+[Here](https://github.com/jam1015/evil-god-toggle?tab=readme-ov-file#installationconfiguration) is an example installation and configuation.
 
 ## Motivation
 
@@ -168,11 +168,14 @@ customization group.
     buffer‑local `god-local-mode`.
 
 
+## Depends-On
+
+Depends on installation of [evil](https://github.com/emacs-evil/evil) and [god-mode](https://github.com/emacsorphanage/god-mode).
 
 
 ## Installation/Configuration
 
-This package is not on MELPA yet. The author does not yet know how to do that so any help is appreciated.
+This package is not on MELPA yet.
 
 ### Example Use-package (with elpaca integration)
 
