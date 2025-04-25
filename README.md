@@ -7,6 +7,7 @@
 - [New Evil States Introduced](#new-evil-states-introduced)
 - [User-facing Functions](#user-facing-functions)
 - [Customizations](#customizations)
+- [Depends-on](#depends-on)
 - [Installation / Configuration](#installation--configuration)
 - [License](#license)
 - [TODO](#todo)
@@ -177,7 +178,7 @@ Depends on installation of [evil](https://github.com/emacs-evil/evil) and [god-m
 
 This package is not on MELPA yet.
 
-### Example Use-package (with elpaca integration)
+#### Example Use-package (with elpaca integration)
 
 The author of this plugin uses [Elpaca](https://github.com/progfolio/elpaca/) to manage packages although [Straight](https://github.com/radian-software/straight.el) might be easier to use.  There is also emacs native package management [package.el](https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/package.el).  See the documentation of those package managers / other sources for how to integrate with the [use-package](https://github.com/jwiegley/use-package) macro. [More documentation for use-package](https://www.gnu.org/software/emacs/manual/html_node/use-package/).
 
