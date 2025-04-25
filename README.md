@@ -154,11 +154,13 @@ customization group.
     `(choice (const :tag "Always" always) (const :tag "To God" to-god) (const :tag "To Evil" to-evil) (const :tag "Never" nil))`
 -   **Default:** `always`
 -   **Description:** Controls whether and when an existing visual
-    selection is preserved when toggling between Evil and God modes.
+    selection or active region is preserved when toggling between Evil and God modes.
     -   `always` -- keep the region on both entry and exit.
     -   `to-god` -- preserve only when entering God.
     -   `to-evil` -- preserve only when returning to Evil.
     -   `nil` -- never preserve the region.
+
+    *Note*: This only works with characterwise visual selection/active regions, not linewise selections or blockwise.
 
 ### `evil-god-toggle-global`
 
@@ -178,7 +180,7 @@ Depends on installation of [evil](https://github.com/emacs-evil/evil) and [god-m
 
 This package is not on MELPA yet.
 
-#### Example Use-package (with elpaca integration)
+### Example Use-package (with elpaca integration)
 
 The author of this plugin uses [Elpaca](https://github.com/progfolio/elpaca/) to manage packages although [Straight](https://github.com/radian-software/straight.el) might be easier to use.  There is also emacs native package management [package.el](https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/package.el).  See the documentation of those package managers / other sources for how to integrate with the [use-package](https://github.com/jwiegley/use-package) macro. [More documentation for use-package](https://www.gnu.org/software/emacs/manual/html_node/use-package/).
 
@@ -245,6 +247,7 @@ Here is an example that works with Elpaca's use-package integration:
 ## TODO
 
 - Implement proper testing
+- linewise/blockwise visual selection/active region preservation.  Attempted this but it was complicated.
 - Get on MELPA
 
 ## Contributing
