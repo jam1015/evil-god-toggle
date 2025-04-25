@@ -182,6 +182,8 @@ This package is not on MELPA yet.
 
 The author of this plugin uses [Elpaca](https://github.com/progfolio/elpaca/) to manage packages although [Straight](https://github.com/radian-software/straight.el) might be easier to use.  There is also emacs native package management [package.el](https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/package.el).  See the documentation of those package managers / other sources for how to integrate with the [use-package](https://github.com/jwiegley/use-package) macro. [More documentation for use-package](https://www.gnu.org/software/emacs/manual/html_node/use-package/).
 
+Here is an example that works with Elpaca's use-package integration:
+
 ```el
 (use-package evil-god-toggle
   :ensure (:host github
@@ -222,6 +224,7 @@ The author of this plugin uses [Elpaca](https://github.com/progfolio/elpaca/) to
         evil-god-toggle-global        nil)
 
   ;; Customize your cursors per state
+  ;; Will add a better way to do this
   (setq evil-god-state-cursor       '(box    "Red")
         evil-god-off-state-cursor   '(bar    "Green")
         evil-insert-state-cursor    '(bar    "Red")
