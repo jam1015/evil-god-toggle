@@ -435,7 +435,7 @@ If already in `god-once`, signal a user-error."
                    ;; `minibufferp` is a predicate, not a command, so check it separately
                    ))
       (unless (minibufferp)
-        (evil-normal-state)
+        (evil-change-to-previous-state)
 
        ;; (let* ((raw-target (or (cdr (assq 'god-once evil-previous-state-alist))
        ;;                        evil-previous-state
