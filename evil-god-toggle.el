@@ -38,7 +38,6 @@
 ;; Ideal for users blending Emacs and Vim-style modal editing.
 ;;
 ;;; Code:
-(provide 'evil-god-toggle)
 
 
 (declare-function universal-argument-minus "simple")
@@ -457,4 +456,5 @@ If already in `god-once`, signal a user-error."
   ;;(message "-- Aborted God mode --")
   )
 
+(provide 'evil-god-toggle)
 ;;; evil-god-toggle.el ends here
