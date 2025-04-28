@@ -306,6 +306,7 @@ previous state."
         (add-hook 'activate-mark-hook   'evil-visual-activate-hook   nil t)
         (add-hook 'deactivate-mark-hook 'evil-visual-deactivate-hook nil t))
 
+;;;###autoload
 (defun evil-god-toggle--execute-in-god-off-state ()
   "Exit God mode (force God-off), optionally restoring visual selection.
 If called from the minibuffer, signal a user-error."  
@@ -317,6 +318,7 @@ If called from the minibuffer, signal a user-error."
     (setq evil-god-toggle--last-command last-command)
     (evil-god-toggle--maybe-restore-visual 'evil-god-off-state)))
 
+;;;###autoload
 (defun evil-god-toggle--execute-in-god-state ()
   "Go into God state, preserving visual selection if configured."
   (interactive)
