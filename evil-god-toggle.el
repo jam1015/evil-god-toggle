@@ -452,7 +452,7 @@ If already in `god-once`, signal a user-error."
   (interactive)
   ;; exit God
   (evil-god-toggle--stop-hook-fun)
-  (evil-normal-state)
+  (evil-god-toggle--stop-execute-in-god-state 'normal)
   ;;(message "-- Aborted God mode --")
   )
 
