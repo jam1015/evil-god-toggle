@@ -60,7 +60,7 @@
 
 
 ;;;###autoload
-(defun evil-god-toggle--god ()
+(defun evil-god-toggle--god-toggle ()
   "Toggle between God mode and Evil mode.
 Handle visual selections and custom transitions."
   (interactive)
