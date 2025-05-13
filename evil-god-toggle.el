@@ -62,7 +62,7 @@
 ;;;###autoload
 (defun evil-god-toggle--god-toggle ()
   "Toggle between God mode and Evil mode.
-Handle visual selections and custom transitions."
+Optional helper function."
   (interactive)
   (if (minibufferp)
       (user-error "Cannot enter God mode from minibuffer")
@@ -159,7 +159,6 @@ Handle visual selections and custom transitions."
 
 (defun evil-god-toggle--add-transient-hooks (add-fix-last add-exit-once)
   "Add transient God-mode hooks locally to current buffer.
-
 ADD-FIX-LAST: non-nil to add `evil-god-toggle--fix-last-command` to `pre-command-hook`.
 ADD-EXIT-ONCE: non-nil to add `evil-god-toggle--exit-once` to `post-command-hook`."
   (when (and add-fix-last (not evil-god-toggle--has-fix-last-command-hook))
@@ -435,14 +434,6 @@ If already in `god-once`, signal a user-error."
                    ))
       (unless (minibufferp)
         (evil-change-to-previous-state)
-
-       ;; (let* ((raw-target (or (cdr (assq 'god-once evil-previous-state-alist))
-       ;;                        evil-previous-state
-       ;;                        'normal))
-       ;;        (target (if (memq raw-target '(god god-once god-off nil))
-       ;;                    'normal
-       ;;                  raw-target)))
-       ;;   (evil-change-state target))
         ))))
 
 

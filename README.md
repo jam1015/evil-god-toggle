@@ -78,7 +78,7 @@ Execute a single command in god mode and then switch back to the previous mode o
 ## User-facing Functions
 
 
-### `evil-god-toggle--god`
+### `evil-god-toggle--god-toggle`
 
 **Arguments:** None (interactive)
 
