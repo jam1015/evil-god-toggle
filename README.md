@@ -197,7 +197,7 @@ Here is an example that works with Elpaca's use-package integration:
 
   ;; Core toggle binding in the minor-mode’s keymap
   (define-key evil-god-toggle-mode-map (kbd "C-;")
-    #'evil-god-toggle--god)
+    #'evil-god-toggle--god-toggle)
 
   ;; Bind escape from god mode to take you to evil normal mode
   (evil-define-key 'god
