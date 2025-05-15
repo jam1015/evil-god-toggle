@@ -1,4 +1,5 @@
 # evil-god-toggle
+![GPLv3](https://img.shields.io/badge/license-GPL--3.0-blue)
 
 - [Description](#description)
 - [TL;DR](#tldr)
@@ -19,11 +20,11 @@
 `evil-god-toggle` is an Emacs package that seamlessly toggles between
 [`evil`](https://github.com/emacs-evil/evil) (Vim emulation) and
 [`god-mode`](https://github.com/emacsorphanage/god-mode) (Emacs modal editing).
- `god-mode` becomes a submode of Evil on the same level as any other mode (insert, visual, etc)
+ `god-mode` becomes a state of Evil just like any other state (insert, visual, etc)
 
 ## TLDR
 
-[Here](https://github.com/jam1015/evil-god-toggle?tab=readme-ov-file#installationconfiguration) is an example installation and configuation.
+[Here](https://github.com/jam1015/evil-god-toggle?tab=readme-ov-file#installationconfiguration) is an example installation and configuration.
 
 ## Motivation
 
@@ -36,7 +37,7 @@ cover every corner case of Emacs use.
 makes it so that it is as if the control key is always pressed down, so that
 the command bound to control+[some other key] is invoked when that other-key is
 pressed alone, without control, with other easy ways to invoke other modifiers.
-In my opinion  `god-mode` is analoglous Normal mode in Vim, where
+In my opinion  `god-mode` is analogous Normal mode in Vim, where
 keys are bound to commands, and the normal state of Emacs (`god-mode` not
 turned on) is like insert mode in Vim, where you can press key-chords to
 operate on text, but otherwise you can type normally.

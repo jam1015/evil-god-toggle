@@ -39,7 +39,9 @@
 ;;
 ;;; Code:
 
-
+(declare-function evil-change-to-previous-state "evil")
+(declare-function evil-visual-activate-hook "evil")
+(declare-function evil-visual-deactivate-hook "evil")
 (declare-function universal-argument-minus "simple")
 (declare-function universal-argument-other-key "simple")
 (defvar evil-god-toggle--once-buffer nil
@@ -52,7 +54,7 @@
 (define-minor-mode evil-god-toggle-mode
   "Toggleable global mode for Evil/God toggling."
   :global t
-  :group 'evil
+  :group 'evil-god-toggle
   :lighter " EGT"
   :keymap evil-god-toggle-mode-map)
 
@@ -165,8 +167,8 @@ ADD-EXIT-ONCE:
     (add-hook 'pre-command-hook #'evil-god-toggle--fix-last-command nil t)
     (setq-local evil-god-toggle--has-fix-last-command-hook t))
   (when (and add-exit-once (not evil-god-toggle--has-exit-once-hook))
-    (setq-local evil-god-toggle--has-exit-once-hook t)
-    (add-hook 'post-command-hook #'evil-god-toggle--exit-once nil t)))
+    (add-hook 'post-command-hook #'evil-god-toggle--exit-once nil t)
+    (setq-local evil-god-toggle--has-exit-once-hook t)))
 
 
 
@@ -237,11 +239,7 @@ previous state."
   "Run before entering `evil-god-once-state'."
  (setq evil-god-toggle--last-command last-command
        evil-god-toggle--once-buffer (current-buffer))
-  (when (or (member #'evil-visual-activate-hook activate-mark-hook)
-          (member #'evil-visual-deactivate-hook deactivate-mark-hook))
-  (remove-hook 'activate-mark-hook 'evil-visual-activate-hook t)
-  (remove-hook 'deactivate-mark-hook 'evil-visual-deactivate-hook t)
-  (setq-local evil-god-toggle--visual-hooks-removed t))
+ (evil-god-toggle--remove-visual-hooks)
   ;; either global or local God
   (evil-god-toggle--add-transient-hooks t t)
   (evil-god-toggle--enable-god))
@@ -292,9 +290,11 @@ previous state."
   "Remove Evil's visual activate/deactivate hooks in the current buffer.
 This prevents Evil's visual selection hooks from firing while in God mode.
 Sets `evil-god-toggle--visual-hooks-removed' to non-nil so we know to restore later."
-  (remove-hook 'activate-mark-hook   'evil-visual-activate-hook   t)
+  (when (or (member #'evil-visual-activate-hook activate-mark-hook)
+          (member #'evil-visual-deactivate-hook deactivate-mark-hook))
+  (remove-hook 'activate-mark-hook 'evil-visual-activate-hook t)
   (remove-hook 'deactivate-mark-hook 'evil-visual-deactivate-hook t)
-  (setq-local evil-god-toggle--visual-hooks-removed t))
+  (setq-local evil-god-toggle--visual-hooks-removed t)))
 
 
 (defun evil-god-toggle--add-visual-hooks ()
@@ -332,7 +332,6 @@ If called from the minibuffer, signal a user-error."
   "Wrapper for leaving god state and switching to TARGET evil state.
 TARGET should be a symbol: `normal', `insert', or `visual'."
   (interactive)
-  (evil-god-toggle--remove-transient-hooks)
   (pcase target
     ('normal (evil-god-toggle--transition-to-normal))
     ('insert (evil-god-toggle--transition-to-insert))
