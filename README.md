@@ -178,7 +178,6 @@ Depends on installation of [evil](https://github.com/emacs-evil/evil) and [god-m
 
 ## Installation/Configuration
 
-This package is not on MELPA yet.
 
 ### Example Use-package (with elpaca integration)
 
