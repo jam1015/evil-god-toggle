@@ -187,7 +187,7 @@ previous state."
           (assq-delete-all 'god evil-previous-state-alist))
     (add-to-list 'evil-previous-state-alist (cons 'god 'normal))))
 
-(add-hook 'evil-visual-state-entry-hook 'evil-god-toggle--check-and-update-previous-state-visual )
+(add-hook 'evil-visual-state-entry-hook #'evil-god-toggle--check-and-update-previous-state-visual )
 
 
 
@@ -233,7 +233,7 @@ previous state."
 (defun evil-god-toggle--fix-last-command ()
 "Internal: Restore `last-command` captured before entering God state."
         (setq last-command evil-god-toggle--last-command)
-        (remove-hook 'pre-command-hook 'evil-god-toggle--fix-last-command))
+        (remove-hook 'pre-command-hook #'evil-god-toggle--fix-last-command))
 
 (defun evil-god-toggle--once-start-hook-fun ()
   "Run before entering `evil-god-once-state'."
@@ -292,8 +292,8 @@ This prevents Evil's visual selection hooks from firing while in God mode.
 Sets `evil-god-toggle--visual-hooks-removed' to non-nil so we know to restore later."
   (when (or (member #'evil-visual-activate-hook activate-mark-hook)
           (member #'evil-visual-deactivate-hook deactivate-mark-hook))
-  (remove-hook 'activate-mark-hook 'evil-visual-activate-hook t)
-  (remove-hook 'deactivate-mark-hook 'evil-visual-deactivate-hook t)
+  (remove-hook 'activate-mark-hook #'evil-visual-activate-hook t)
+  (remove-hook 'deactivate-mark-hook #'evil-visual-deactivate-hook t)
   (setq-local evil-god-toggle--visual-hooks-removed t)))
 
 
@@ -301,8 +301,8 @@ Sets `evil-god-toggle--visual-hooks-removed' to non-nil so we know to restore la
   "Re-add Evil's visual activate/deactivate hooks in the current buffer.
 Restores visual selection behavior by adding `evil-visual-activate-hook' to
 `activate-mark-hook' and `evil-visual-deactivate-hook' to `deactivate-mark-hook'."
-  (add-hook 'activate-mark-hook   'evil-visual-activate-hook   nil t)
-  (add-hook 'deactivate-mark-hook 'evil-visual-deactivate-hook nil t))
+  (add-hook 'activate-mark-hook   #'evil-visual-activate-hook   nil t)
+  (add-hook 'deactivate-mark-hook #'evil-visual-deactivate-hook nil t))
 
 ;;;###autoload
 (defun evil-god-toggle-execute-in-god-off-state ()
