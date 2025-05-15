@@ -24,7 +24,8 @@
 
 ## TLDR
 
-[Here](https://github.com/jam1015/evil-god-toggle?tab=readme-ov-file#installationconfiguration) is an example installation and configuration.
+[Here](https://github.com/jam1015/evil-god-toggle?tab=readme-ov-file#installationconfiguration)
+is an example installation and configuration.
 
 ## Motivation
 
@@ -43,8 +44,8 @@ turned on) is like insert mode in Vim, where you can press key-chords to
 operate on text, but otherwise you can type normally.
 
 [This section](https://github.com/emacsorphanage/god-mode?tab=readme-ov-file#usage-with-evil)
-of the `god-mode` README says lists ways of using god-mode alongside evil.
-None of them make a way of persistently using `god-mode` alongside evil to my
+of the `god-mode` README says lists ways of using god-mode alongside evil. None
+of them make a way of persistently using `god-mode` alongside evil to my
 satisfaction.
 
 The third bullet in that section point goes over how
@@ -64,16 +65,23 @@ Mode that contains the map to which the user should assign all keymaps to comman
 
 ### `god-mode`
 
-Emacs should function just like if you were in god mode, but it is now a state of Evil mode on the same level with Normal mode and insert mode
+Emacs should function just like if you were in god mode, but it is now a state
+of Evil mode on the same level with Normal mode and insert mode
 
 
 ### `god-off-mode`
 
-Basically an Evil mode with no keybindings, very similar to the 'Emacs Mode' of Evil that you reach with `C-z`.  This is included as a clean state that is easy to switch back and forth between with `god-mode`, whereas `Emacs Mode` has its own rules for when it is switched in and out of.
+Basically an Evil mode with no keybindings, very similar to the 'Emacs Mode' of
+Evil that you reach with `C-z`.  This is included as a clean state that is easy
+to switch back and forth between with `god-mode`, whereas `Emacs Mode` has
+previously presented challenges regarding state transitions to the author of
+this plugin.
+
 
 ### `god-once-mode`
 
-Execute a single command in god mode and then switch back to the previous mode of Evil.
+Execute a single command in god mode and then switch back to the previous mode
+of Evil.
 
 
 ## User-facing Functions
@@ -185,7 +193,7 @@ Here is an example that works with Elpaca's use-package integration:
 ```el
 (use-package evil-god-toggle
   :ensure (:host github :repo "jam1015/evil-god-toggle")
-  :after (evil god-mode cursor-contraster which-key)
+  :after (evil god-mode which-key)
 
   ;;—————— Initialization ——————
   :init
