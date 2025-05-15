@@ -9,7 +9,7 @@
 - [User-facing Functions](#user-facing-functions)
 - [Customizations](#customizations)
 - [Depends-on](#depends-on)
-- [Installation / Configuration](#installation--configuration)
+- [Installation and Configuration](#installation-and-configuration)
 - [License](#license)
 - [TODO](#todo)
 - [Contributing](#contributing)
@@ -24,8 +24,7 @@
 
 ## TLDR
 
-[Here](https://github.com/jam1015/evil-god-toggle?tab=readme-ov-file#installationconfiguration)
-is an example installation and configuration.
+[Here](#installation-and-configuration) is an example installation and configuration.
 
 ## Motivation
 
