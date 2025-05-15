@@ -18,8 +18,8 @@
 ## Description
 
 `evil-god-toggle` is an Emacs package that seamlessly toggles between
-[`evil`](https://github.com/emacs-evil/evil) (Vim emulation) and
-[`god-mode`](https://github.com/emacsorphanage/god-mode) (Emacs modal editing).
+[`evil`][evil] (Vim emulation) and
+[`god-mode`][god-mode] (Emacs modal editing).
  `god-mode` becomes a state of Evil just like any other state (insert, visual, etc)
 
 ## TLDR
@@ -31,8 +31,7 @@ is an example installation and configuration.
 
 As a Neovim user I was curious about Emacs. However, key-chords were difficult
 to get used to, Vim bindings are very habitual, and I heard that even
-evil+[evil-collection](https://github.com/emacs-evil/evil-collection) didn't
-cover every corner case of Emacs use.
+evil+[evil-collection](https://github.com/emacs-evil/evil-collection) didn't cover every corner case of Emacs use.
 
 `god-mode` seemed like a great and simple way to add modality to emacs; it
 makes it so that it is as if the control key is always pressed down, so that
@@ -49,7 +48,7 @@ of them make a way of persistently using `god-mode` alongside evil to my
 satisfaction.
 
 The third bullet in that section point goes over how
-[`evil-god-state`](https://github.com/gridaphobe/evil-god-state) creates a
+[`evil-god-state`][evil-god-state] creates a
 state of evil-mode dedicated to god-mode that lasts for one command.  This
 package extends that by creating a persistent state of Evil dedicated completely
 to `god-mode`, while also including a one-off god state similar to `evil-god-state`.
@@ -270,3 +269,10 @@ Here is an example that works with Elpaca's use-package integration:
 
 Please feel free to complain by opening an issue or be helpful by opening a
 pull request.
+
+## Related
+
+[evil-collection]:    https://github.com/emacs-evil/evil-collection
+[god-mode]:           https://github.com/emacsorphanage/god-mode
+[evil-god-state]:     https://github.com/gridaphobe/evil-god-state
+[installation]:       #installation--configuration
