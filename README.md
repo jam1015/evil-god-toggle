@@ -188,50 +188,63 @@ Here is an example that works with Elpaca's use-package integration:
 
 ```el
 (use-package evil-god-toggle
-  :ensure (:host github
-                 :repo "jam1015/evil-god-toggle"
-                 :after (evil god))
+  :ensure (:host github :repo "jam1015/evil-god-toggle")
+  :after (evil god-mode cursor-contraster which-key)
+
+  ;;—————— Initialization ——————
+  :init
+  ;; (Optionally tweak any defcustoms here, before the package loads.)
+  ;; For example, to set visual-selection persistence or global mode:
+  ;; (setq evil-god-toggle-persist-visual 'always
+  ;;       evil-god-toggle-global        t)
+
+  ;;—————— Configuration ——————
   :config
-  ;; Enable the global minor mode (so its keymap + lighter are active)
+  ;; 1) Turn on the minor mode so its keymap & lighter are active:
   (evil-god-toggle-mode 1)
 
-  ;; Core toggle binding in the minor-mode’s keymap
-  (define-key evil-god-toggle-mode-map (kbd "C-;")
-    #'evil-god-toggle--god-toggle)
+  ;; 2) Toggle into “full” God mode from Normal/Insert:
+  (evil-define-key '(normal insert)
+    evil-god-toggle-mode-map
+    ;; C-; → enter persistent god-mode
+    (kbd "C-;") #'evil-god-toggle--execute-in-god-state)
 
-  ;; Bind escape from god mode to take you to evil normal mode
+  ;; 3) From within God mode, go back to the previous Evil state:
   (evil-define-key 'god
     evil-god-toggle-mode-map
-    [escape] (lambda () (interactive)
+    ;; C-; → change back to whatever state was active before
+    (kbd "C-;") #'evil-change-to-previous-state)
+
+  ;; 4) Bind Escape in both god & god-off states to return to Normal:
+  (evil-define-key '(god god-off)
+    evil-god-toggle-mode-map
+    [escape] (lambda ()
+               (interactive)
+               ;; On exit, land in ‘normal’ state (you can swap to 'insert if you prefer)
                (evil-god-toggle--stop-choose-state 'normal)))
 
-  ;; Bind escape from god-off mode to take you to evil insert mode
-  (evil-define-key 'god-off
+  ;; 5) A “flip-flop” binding: M-; toggles on/off God mode in any state
+  (evil-define-key '(god god-off normal insert)
     evil-god-toggle-mode-map
-    [escape] (lambda () (interactive)
-               (evil-god-toggle--stop-choose-state 'insert)))
+    (kbd "M-;") #'evil-god-toggle--god-toggle)
 
-  ;; Bind  shift+escape to bail from god-off-mode 
-  (evil-define-key 'god-off
+  ;; 6) One-shot God: press C-, in Normal/Insert to enter for exactly one command
+  (evil-define-key '(normal insert)
     evil-god-toggle-mode-map
-    (kbd "<S-escape>") #'evil-god-toggle-bail)
+    (kbd "C-,") #'evil-god-toggle--once)
 
-  ;; Bind comma in  evil normal mode to initiate a once-off god mode command
-  (evil-define-key 'normal
-    evil-god-toggle-mode-map
-    "," #'evil-god-toggle--once)
-
-  ;; Your visual‑persistence and global flag settings
+  ;;—————— Custom options ——————
+  ;; Preserve any active region when toggling modes:
   (setq evil-god-toggle-persist-visual 'always
-        evil-god-toggle-global        nil)
+        ;; Make god-mode global (applies to all buffers) instead of buffer-local:
+        evil-god-toggle-global        t)
 
-  ;; Customize your cursors per state
-  ;; Will add a better way to do this
-  (setq evil-god-state-cursor       '(box    "Red")
-        evil-god-off-state-cursor   '(bar    "Green")
-        evil-insert-state-cursor    '(bar    "Red")
-        evil-visual-state-cursor    '(hollow "Red")
-        evil-normal-state-cursor    '(hollow "Black"))
+  ;;—————— Optional cursor styling ——————
+  ;; (setq evil-god-state-cursor     '(box    "Red")
+  ;;       evil-god-off-state-cursor '(bar    "Green")
+  ;;       evil-insert-state-cursor '(bar    "Red")
+  ;;       evil-visual-state-cursor '(hollow "Red")
+  ;;       evil-normal-state-cursor '(hollow "Black"))
   )
 ```
 
@@ -248,7 +261,6 @@ Here is an example that works with Elpaca's use-package integration:
 
 - Implement proper testing
 - linewise/blockwise visual selection/active region preservation.  Attempted this but it was complicated.
-- Get on MELPA
 
 ## Contributing
 
