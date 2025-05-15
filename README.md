@@ -59,7 +59,7 @@ to `god-mode`, while also including a one-off god state similar to `evil-god-sta
 
 Mode that contains the map to which the user should assign all keymaps to commands introduced in this package.
 
-## New Evil Modes Introduced
+## New Evil States Introduced
 
 ### `god-mode`
 
@@ -78,15 +78,15 @@ Execute a single command in god mode and then switch back to the previous mode o
 ## User-facing Functions
 
 
-### `evil-god-toggle--god-toggle`
+### `evil-god-toggle-god-toggle`
 
 **Arguments:** None (interactive)
 
 **Return Value:** `nil`
 
 **Description:** If currently in God state, calls
-`evil-god-toggle--execute-in-god-off-state` (enter a transient "God‑off"
-state). Otherwise, calls `evil-god-toggle--execute-in-god-state` (enter
+`evil-god-toggle-execute-in-god-off-state` (enter a transient "God‑off"
+state). Otherwise, calls `evil-god-toggle-execute-in-god-state` (enter
 full God state). Protects against invocation from the minibuffer.
 
 If `evil-god-toggle-persist-visual` (see documentation for more on that) specifies it, a Evil mode visual selection will be preserved as an active region in god mode.
@@ -96,7 +96,7 @@ Evil and God modes with one key. Handles both toggling on (to God) and
 toggling off (to `god-off-state`)
 
 
-### `evil-god-toggle--stop-choose-state`
+### `evil-god-toggle-stop-choose-state`
 
 **Arguments:** `alternate_target` (symbol) -- one of `'normal`,
 `'insert`, or `'visual`.
@@ -112,7 +112,7 @@ Otherwise, switches into the specified `alternate_target` Evil state.
 Evil when I leave God?", handling visual‑selection persistence or
 falling back to normal/insert states.
 
-### `evil-god-toggle--once`
+### `evil-god-toggle-once`
 
 **Arguments:** None (interactive)
 
@@ -128,7 +128,7 @@ any God state or in the minibuffer.
 for a single command (e.g. one control‑key chord) without having to
 remember to toggle back themselves.
 
-### `evil-god-toggle--bail`
+### `evil-god-toggle-bail`
 
 **Arguments:** None (interactive)
 
@@ -207,7 +207,7 @@ Here is an example that works with Elpaca's use-package integration:
   (evil-define-key '(normal insert)
     evil-god-toggle-mode-map
     ;; C-; → enter persistent god-mode
-    (kbd "C-;") #'evil-god-toggle--execute-in-god-state)
+    (kbd "C-;") #'evil-god-toggle-execute-in-god-state)
 
   ;; 3) From within God mode, go back to the previous Evil state:
   (evil-define-key 'god
@@ -221,17 +221,17 @@ Here is an example that works with Elpaca's use-package integration:
     [escape] (lambda ()
                (interactive)
                ;; On exit, land in ‘normal’ state (you can swap to 'insert if you prefer)
-               (evil-god-toggle--stop-choose-state 'normal)))
+               (evil-god-toggle-stop-choose-state 'normal)))
 
   ;; 5) A “flip-flop” binding: M-; toggles on/off God mode in any state
   (evil-define-key '(god god-off normal insert)
     evil-god-toggle-mode-map
-    (kbd "M-;") #'evil-god-toggle--god-toggle)
+    (kbd "M-;") #'evil-god-toggle-god-toggle)
 
   ;; 6) One-shot God: press C-, in Normal/Insert to enter for exactly one command
   (evil-define-key '(normal insert)
     evil-god-toggle-mode-map
-    (kbd "C-,") #'evil-god-toggle--once)
+    (kbd "C-,") #'evil-god-toggle-once)
 
   ;;—————— Custom options ——————
   ;; Preserve any active region when toggling modes:
