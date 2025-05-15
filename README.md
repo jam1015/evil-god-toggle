@@ -27,7 +27,7 @@
 
 ## Motivation
 
-As a Neovim user I was curious about Emacs.  However, key-chords were difficult
+As a Neovim user I was curious about Emacs. However, key-chords were difficult
 to get used to, Vim bindings are very habitual, and I heard that even
 evil+[evil-collection](https://github.com/emacs-evil/evil-collection) didn't
 cover every corner case of Emacs use.
@@ -36,7 +36,7 @@ cover every corner case of Emacs use.
 makes it so that it is as if the control key is always pressed down, so that
 the command bound to control+[some other key] is invoked when that other-key is
 pressed alone, without control, with other easy ways to invoke other modifiers.
-In my opinion this makes `god-mode` is analoglous Normal mode in Vim, where
+In my opinion  `god-mode` is analoglous Normal mode in Vim, where
 keys are bound to commands, and the normal state of Emacs (`god-mode` not
 turned on) is like insert mode in Vim, where you can press key-chords to
 operate on text, but otherwise you can type normally.
@@ -135,13 +135,9 @@ remember to toggle back themselves.
 **Return Value:** `nil`
 
 **Description:** Immediately removes any transient God hooks, disables
-God mode, and forces Evil normal state. Displays a "\-- Aborted God mode
-\--" message.
+God mode, and forces Evil normal state.
 
-**Intended Purpose:** Provide an "emergency exit" so that if the user
-finds themselves stuck in God mode they can instantly return to standard
-Evil behavior.
-
+**Intended Purpose:** Exit God mode.
 
 ### Customizations
 
@@ -176,7 +172,7 @@ customization group.
 Depends on installation of [evil](https://github.com/emacs-evil/evil) and [god-mode](https://github.com/emacsorphanage/god-mode).
 
 
-## Installation/Configuration
+## Installation and Configuration
 
 
 ### Example Use-package (with elpaca integration)
