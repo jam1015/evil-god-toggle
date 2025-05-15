@@ -274,4 +274,3 @@ pull request.
 - evil-collection:    https://github.com/emacs-evil/evil-collection
 - god-mode:           https://github.com/emacsorphanage/god-mode
 - evil-god-state:     https://github.com/gridaphobe/evil-god-state
-- installation:       #installation--configuration
