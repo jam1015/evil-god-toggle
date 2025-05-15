@@ -10,7 +10,7 @@
 - [Customizations](#customizations)
 - [Depends-on](#depends-on)
 - [Installation and Configuration](#installation-and-configuration)
-- [License](#license)
+- [Version/License](#versionlicense)
 - [TODO](#todo)
 - [Contributing](#contributing)
 
@@ -270,7 +270,6 @@ Please feel free to complain by opening an issue or be helpful by opening a
 pull request.
 
 ## Related
-
 
 [evil-collection]:    https://github.com/emacs-evil/evil-collection
 [god-mode]:           https://github.com/emacsorphanage/god-mode
