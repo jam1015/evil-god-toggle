@@ -18,8 +18,8 @@
 ## Description
 
 `evil-god-toggle` is an Emacs package that seamlessly toggles between
-[`evil`][evil] (Vim emulation) and
-[`god-mode`][god-mode] (Emacs modal editing).
+[`evil`](https://github.com/emacs-evil/evil) (Vim emulation) and
+[`god-mode`](https://github.com/emacsorphanage/god-mode) (Emacs modal editing).
  `god-mode` becomes a state of Evil just like any other state (insert, visual, etc)
 
 ## TLDR
@@ -48,7 +48,7 @@ of them make a way of persistently using `god-mode` alongside evil to my
 satisfaction.
 
 The third bullet in that section point goes over how
-[`evil-god-state`][evil-god-state] creates a
+[`evil-god-state`](https://github.com/gridaphobe/evil-god-state) creates a
 state of evil-mode dedicated to god-mode that lasts for one command.  This
 package extends that by creating a persistent state of Evil dedicated completely
 to `god-mode`, while also including a one-off god state similar to `evil-god-state`.
@@ -271,6 +271,7 @@ Please feel free to complain by opening an issue or be helpful by opening a
 pull request.
 
 ## Related
+
 
 [evil-collection]:    https://github.com/emacs-evil/evil-collection
 [god-mode]:           https://github.com/emacsorphanage/god-mode
