@@ -358,7 +358,8 @@ stash its bounds **and** direction, then call visual; else normal."
              (beg     (min m p))
              ;; Emacs's region-end is exclusive, so -1 to make it inclusive
              (end     (1- (max m p)))
-             (forward (<= m p)))                ; mark before point?
+             ;; mark before point?
+             (forward (<= m p)))
         (setq evil-god-toggle--visual-beg     beg
               evil-god-toggle--visual-end     end
               evil-god-toggle--visual-forward forward)
