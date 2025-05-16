@@ -129,10 +129,10 @@ Optional helper function."
 
 
 (defvar-local evil-god-toggle--has-fix-last-command-hook nil
-  "Non-nil if `evil-god-toggle--fix-last-command` was added to this buffer's `pre-command-hook`.")
+  "Non-nil if `evil-god-toggle--fix-last-command` in local `pre-command-hook`.")
 
 (defvar-local evil-god-toggle--has-exit-once-hook nil
-  "Non-nil if `evil-god-toggle--exit-once` was added to this buffer's `post-command-hook`.")
+  "Non-nil if `evil-god-toggle--exit-once` in local `post-command-hook`.")
 
 (defvar evil-god-toggle--last-command nil
   "Command executed just before entering god state.")
@@ -203,7 +203,7 @@ previous state."
         (setq-local evil-god-toggle--visual-hooks-removed nil)))))
 
 (defun evil-god-toggle--disable-god ()
-  "Disable God mode, either globally or buffer-locally per `evil-god-toggle-global'."
+  "Disable God mode, globally or buffer-locally per `evil-god-toggle-global'."
   (if evil-god-toggle-global
       (god-mode-all -1)
     (god-local-mode -1)))
@@ -287,9 +287,9 @@ previous state."
 
 
 (defun evil-god-toggle--remove-visual-hooks ()
-  "Remove Evil's visual activate/deactivate hooks in the current buffer.
-This prevents Evil's visual selection hooks from firing while in God mode.
-Sets `evil-god-toggle--visual-hooks-removed' to non-nil so we know to restore later."
+  "Remove Evil's visual activate/deactivate hooks in current buffer.
+Prevents Evil's visual selection hooks from firing while in God mode.
+`evil-god-toggle--visual-hooks-removed' set to non-nil so we know to restore."
   (when (or (member #'evil-visual-activate-hook activate-mark-hook)
           (member #'evil-visual-deactivate-hook deactivate-mark-hook))
   (remove-hook 'activate-mark-hook #'evil-visual-activate-hook t)
@@ -300,7 +300,7 @@ Sets `evil-god-toggle--visual-hooks-removed' to non-nil so we know to restore la
 (defun evil-god-toggle--add-visual-hooks ()
   "Re-add Evil's visual activate/deactivate hooks in the current buffer.
 Restores visual selection behavior by adding `evil-visual-activate-hook' to
-`activate-mark-hook' and `evil-visual-deactivate-hook' to `deactivate-mark-hook'."
+`activate-mark-hook', `evil-visual-deactivate-hook', to `deactivate-mark-hook'."
   (add-hook 'activate-mark-hook   #'evil-visual-activate-hook   nil t)
   (add-hook 'deactivate-mark-hook #'evil-visual-deactivate-hook nil t))
 
@@ -378,8 +378,8 @@ TARGET should be a symbol: `normal', `insert', or `visual'."
 ;;;###autoload
 (defun evil-god-toggle-stop-choose-state (alternate_target)
   "From God, toggle back into Evil, choosing appropriate state.
-Restore visual or going to state specified by 'ALTERNATE_TARGET'.
-Alternate_target can be 'normal 'insert or 'visual .
+Restore visual or going to state specified by `ALTERNATE_TARGET'.
+Alternate_target can be \='normal \='insert or \='visual .
 If there's an active region AND either persist-visual flag is t,
 stash its bounds **and** direction, then call visual; else normal."
   (interactive)
