@@ -45,6 +45,9 @@
 (declare-function evil-visual-deactivate-hook "evil")
 (declare-function universal-argument-minus "simple")
 (declare-function universal-argument-other-key "simple")
+(require 'evil)
+(require 'god-mode)
+
 (defvar evil-god-toggle--once-buffer nil
   "The buffer in which `god-once` was entered, for restoring Evil state.")
 
@@ -59,9 +62,6 @@
   :lighter " EGT"
   :keymap evil-god-toggle-mode-map)
 
-(require 'evil)
-(require 'god-mode)
-
 ;;;###autoload
 (defun evil-god-toggle-god-toggle ()
   "Toggle between God mode and Evil mode.
@@ -75,6 +75,83 @@ Optional helper function."
      (evil-god-toggle-execute-in-god-off-state))
      ;;;; Default case for any other states
      (t (evil-god-toggle-execute-in-god-state)))))
+
+;;;###autoload
+(defun evil-god-toggle-execute-in-god-off-state ()
+  "Exit God mode (force `god-off'), optionally restoring visual selection.
+If called from the minibuffer, signal a user-error."
+  (interactive)
+  (if (minibufferp)
+      (user-error "Cannot enter `god-off' mode from minibuffer")
+    ;; original behavior
+    (evil-god-toggle--add-transient-hooks t nil)
+    (setq evil-god-toggle--last-command last-command)
+    (evil-god-toggle--maybe-restore-visual 'evil-god-off-state)))
+
+;;;###autoload
+(defun evil-god-toggle-execute-in-god-state ()
+  "Go into God state, preserving visual selection if configured."
+  (interactive)
+  (setq evil-god-toggle--last-command last-command)
+  (evil-god-toggle--add-transient-hooks t nil)
+  (evil-god-toggle--maybe-restore-visual  'evil-god-state))
+
+;;;###autoload
+(defun evil-god-toggle-stop-execute-in-god-state (target)
+  "Wrapper for leaving god state and switching to TARGET evil state.
+TARGET should be a symbol: `normal', `insert', or `visual'."
+  (interactive)
+  (pcase target
+    ('normal (evil-god-toggle--transition-to-normal))
+    ('insert (evil-god-toggle--transition-to-insert))
+    ('visual (evil-god-toggle--transition-to-visual))
+    (_       (evil-god-toggle--transition-to-normal))) ;; fallback
+  (force-mode-line-update))
+
+;;;###autoload
+(defun evil-god-toggle-stop-choose-state (alternate_target)
+  "From God, toggle back into Evil, choosing appropriate state.
+Restore visual or going to state specified by `ALTERNATE_TARGET'.
+Alternate_target can be \='normal \='insert or \='visual .
+If there's an active region AND either persist-visual flag is t,
+stash its bounds **and** direction, then call visual; else normal."
+  (interactive)
+  ;; only if a region is selected
+  (if (and (use-region-p)  (memq evil-god-toggle-persist-visual '(always to-evil)))
+      (let* ((m       (mark))
+             (p       (point))
+             (beg     (min m p))
+             ;; Emacs's region-end is exclusive, so -1 to make it inclusive
+             (end     (1- (max m p)))
+             ;; mark before point?
+             (forward (<= m p)))
+        (setq evil-god-toggle--visual-beg     beg
+              evil-god-toggle--visual-end     end
+              evil-god-toggle--visual-forward forward)
+	(evil-god-toggle-stop-execute-in-god-state 'visual))
+    (evil-god-toggle-stop-execute-in-god-state alternate_target)))
+
+;;;###autoload
+(defun evil-god-toggle-once ()
+  "Enter God mode for exactly one command, then return to Evil.
+If already in `god-once', signal a user-error."
+  (interactive)
+  (cond
+   ((minibufferp)
+    (user-error "Cannot enter god-once mode from minibuffer"))
+   ((eq evil-state 'god-once)
+    (user-error "Already in god-once state"))
+   ((eq evil-state 'god)
+    (user-error "Already in god state"))
+   (t (evil-god-once-state))))
+
+;;;###autoload
+(defun evil-god-toggle-bail ()
+  "Abort any God state immediately and return to Evil normal."
+  (interactive)
+  ;; exit God
+  (evil-god-toggle--stop-hook-fun)
+  (evil-god-toggle-stop-execute-in-god-state 'normal))
 
 (evil-define-state god
   "God state." :tag " <G> "
@@ -199,7 +276,7 @@ previous state."
     (god-local-mode 1)))
 
 (defun evil-god-toggle--start-hook-fun ()
-  "Run before exiting `evil-god-state'."
+  "Run before entering `evil-god-state'."
   (when (or (member #'evil-visual-activate-hook activate-mark-hook)
           (member #'evil-visual-deactivate-hook deactivate-mark-hook))
     (evil-god-toggle--remove-visual-hooks))
@@ -277,37 +354,6 @@ Restores visual selection behavior by adding `evil-visual-activate-hook' to
   (add-hook 'activate-mark-hook   #'evil-visual-activate-hook   nil t)
   (add-hook 'deactivate-mark-hook #'evil-visual-deactivate-hook nil t))
 
-;;;###autoload
-(defun evil-god-toggle-execute-in-god-off-state ()
-  "Exit God mode (force `god-off'), optionally restoring visual selection.
-If called from the minibuffer, signal a user-error."
-  (interactive)
-  (if (minibufferp)
-      (user-error "Cannot enter `god-off' mode from minibuffer")
-    ;; original behavior
-    (evil-god-toggle--add-transient-hooks t nil)
-    (setq evil-god-toggle--last-command last-command)
-    (evil-god-toggle--maybe-restore-visual 'evil-god-off-state)))
-
-;;;###autoload
-(defun evil-god-toggle-execute-in-god-state ()
-  "Go into God state, preserving visual selection if configured."
-  (interactive)
-  (setq evil-god-toggle--last-command last-command)
-  (evil-god-toggle--add-transient-hooks t nil)
-  (evil-god-toggle--maybe-restore-visual  'evil-god-state))
-
-;;;###autoload
-(defun evil-god-toggle-stop-execute-in-god-state (target)
-  "Wrapper for leaving god state and switching to TARGET evil state.
-TARGET should be a symbol: `normal', `insert', or `visual'."
-  (interactive)
-  (pcase target
-    ('normal (evil-god-toggle--transition-to-normal))
-    ('insert (evil-god-toggle--transition-to-insert))
-    ('visual (evil-god-toggle--transition-to-visual))
-    (_       (evil-god-toggle--transition-to-normal))) ;; fallback
-  (force-mode-line-update))
 
 (defun evil-god-toggle--transition-to-normal ()
 "Transition to evil normal state from god state."
@@ -343,42 +389,6 @@ TARGET should be a symbol: `normal', `insert', or `visual'."
     ;; fallback: exactly like pressing `v` in normal
     (evil-visual-char)))
 
-;;;###autoload
-(defun evil-god-toggle-stop-choose-state (alternate_target)
-  "From God, toggle back into Evil, choosing appropriate state.
-Restore visual or going to state specified by `ALTERNATE_TARGET'.
-Alternate_target can be \='normal \='insert or \='visual .
-If there's an active region AND either persist-visual flag is t,
-stash its bounds **and** direction, then call visual; else normal."
-  (interactive)
-  ;; only if a region is selected
-  (if (and (use-region-p)  (memq evil-god-toggle-persist-visual '(always to-evil)))
-      (let* ((m       (mark))
-             (p       (point))
-             (beg     (min m p))
-             ;; Emacs's region-end is exclusive, so -1 to make it inclusive
-             (end     (1- (max m p)))
-             ;; mark before point?
-             (forward (<= m p)))
-        (setq evil-god-toggle--visual-beg     beg
-              evil-god-toggle--visual-end     end
-              evil-god-toggle--visual-forward forward)
-	(evil-god-toggle-stop-execute-in-god-state 'visual))
-    (evil-god-toggle-stop-execute-in-god-state alternate_target)))
-
-;;;###autoload
-(defun evil-god-toggle-once ()
-  "Enter God mode for exactly one command, then return to Evil.
-If already in `god-once', signal a user-error."
-  (interactive)
-  (cond
-   ((minibufferp)
-    (user-error "Cannot enter god-once mode from minibuffer"))
-   ((eq evil-state 'god-once)
-    (user-error "Already in god-once state"))
-   ((eq evil-state 'god)
-    (user-error "Already in god state"))
-   (t (evil-god-once-state))))
 
 (defun evil-god-toggle--exit-once ()
   "Exit `god-once` state and return to Evil's previous state, or `normal` if ambiguous."
@@ -401,13 +411,6 @@ If already in `god-once', signal a user-error."
       (unless (minibufferp)
         (evil-change-to-previous-state)))))
 
-;;;###autoload
-(defun evil-god-toggle-bail ()
-  "Abort any God state immediately and return to Evil normal."
-  (interactive)
-  ;; exit God
-  (evil-god-toggle--stop-hook-fun)
-  (evil-god-toggle-stop-execute-in-god-state 'normal))
 
 (provide 'evil-god-toggle)
 ;;; evil-god-toggle.el ends here
