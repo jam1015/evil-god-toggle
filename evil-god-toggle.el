@@ -99,7 +99,8 @@ If called from the minibuffer, signal a user-error."
 ;;;###autoload
 (defun evil-god-toggle-stop-execute-in-god-state (target)
   "Wrapper for leaving god state and switching to TARGET evil state.
-TARGET should be a symbol: `normal', `insert', or `visual'."
+TARGET should be a symbol: `normal', `insert', or `visual'.
+Does not respect `evil-god-toggle-visual-persist'"
   (interactive)
   (pcase target
     ('normal (evil-god-toggle--transition-to-normal))
@@ -114,7 +115,9 @@ TARGET should be a symbol: `normal', `insert', or `visual'."
 Restore visual or going to state specified by `ALTERNATE_TARGET'.
 Alternate_target can be \='normal \='insert or \='visual .
 If there's an active region AND either persist-visual flag is t,
-stash its bounds **and** direction, then call visual; else normal."
+stash its bounds **and** direction, then call visual; else normal.
+This is the function that should be used for keybindings because
+it it respects `evil-god-toggle-visual-persist'"
   (interactive)
   ;; only if a region is selected
   (if (and (use-region-p)  (memq evil-god-toggle-persist-visual '(always to-evil)))
