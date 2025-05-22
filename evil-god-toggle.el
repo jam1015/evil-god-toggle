@@ -48,6 +48,33 @@
 (require 'evil)
 (require 'god-mode)
 
+;; Customization group
+
+;;;###autoload
+(defgroup evil-god-toggle nil
+  "Customization group for evil-god-toggle."
+  :group 'convenience
+  :prefix "evil-god-toggle-")
+
+
+;; customization options
+
+;;;###autoload
+(defcustom evil-god-toggle-persist-visual 'always
+  "Control persistence of visual selection when toggling."
+  :type '(choice (const :tag "Always" always)
+                 (const :tag "To God" to-god)
+                 (const :tag "To Evil" to-evil)
+                 (const :tag "Never" nil))
+  :group 'evil-god-toggle)
+
+;;;###autoload
+(defcustom evil-god-toggle-global nil
+  "If non-nil, use `god-mode-all` instead of `god-local-mode` (per-buffer)."
+  :type 'boolean
+  :group 'evil-god-toggle)
+
+
 (defvar evil-god-toggle--once-buffer nil
   "The buffer in which `god-once` was entered, for restoring Evil state.")
 
@@ -197,25 +224,7 @@ If already in `god-once', signal a user-error."
   :exit-hook   evil-god-toggle--off-stop-hook-fun
   :input-method t :intercept-esc nil)
 
-  ;; Customization group
-(defgroup evil-god-toggle nil
-  "Customization group for evil-god-toggle."
-  :group 'convenience
-  :prefix "evil-god-toggle-")
 
-    ;; Options
-(defcustom evil-god-toggle-persist-visual 'always
-  "Control persistence of visual selection when toggling."
-  :type '(choice (const :tag "Always" always)
-                 (const :tag "To God" to-god)
-                 (const :tag "To Evil" to-evil)
-                 (const :tag "Never" nil))
-  :group 'evil-god-toggle)
-
-(defcustom evil-god-toggle-global nil
-  "If non-nil, use `god-mode-all` instead of `god-local-mode` (per-buffer)."
-  :type 'boolean
-  :group 'evil-god-toggle)
 
 
 (defun evil-god-toggle--remove-transient-hooks ()
