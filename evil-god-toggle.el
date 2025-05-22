@@ -103,11 +103,19 @@
 
 ;;;###autoload
 (define-minor-mode evil-god-toggle-mode
-  "Toggleable global mode for Evil/God toggling."
+  "Global mode for Evil/God toggling.
+Creates god-mode states for Evil."
   :global t
   :group 'evil-god-toggle
   :lighter " EGT"
-  :keymap evil-god-toggle-mode-map)
+  :keymap evil-god-toggle-mode-map
+ (if evil-god-toggle-mode
+      ;; Mode is being turned ON
+      (add-hook 'evil-visual-state-entry-hook
+                #'evil-god-toggle--check-and-update-previous-state-visual)
+    ;; Mode is being turned OFF
+    (remove-hook 'evil-visual-state-entry-hook
+                 #'evil-god-toggle--check-and-update-previous-state-visual)))
 
 ;;;###autoload
 (defun evil-god-toggle-god-toggle ()
@@ -265,7 +273,6 @@ previous state."
           (assq-delete-all 'god evil-previous-state-alist))
     (add-to-list 'evil-previous-state-alist (cons 'god 'normal))))
 
-(add-hook 'evil-visual-state-entry-hook #'evil-god-toggle--check-and-update-previous-state-visual)
 
 (defun evil-god-toggle--restore-visual-hooks ()
   "Re-add Evil visual activate/deactivate hooks where they were previously removed."
