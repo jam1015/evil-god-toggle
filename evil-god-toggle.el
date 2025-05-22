@@ -104,7 +104,7 @@
 ;;;###autoload
 (define-minor-mode evil-god-toggle-mode
   "Global mode for Evil/God toggling.
-Creates god-mode states for Evil."
+Creates `god-mode' states for Evil."
   :global t
   :group 'evil-god-toggle
   :lighter " EGT"
