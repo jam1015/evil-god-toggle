@@ -54,6 +54,26 @@
 (defvar evil-god-toggle-mode-map (make-sparse-keymap)
   "Keymap for `evil-god-toggle-mode'.")
 
+
+(defvar-local evil-god-toggle--visual-hooks-removed nil
+  "Non-nil if evil-god-toggle removed visual mark hooks in this buffer.")
+
+(defvar-local evil-god-toggle--has-fix-last-command-hook nil
+  "Non-nil if `evil-god-toggle--fix-last-command` in local `pre-command-hook`.")
+
+(defvar-local evil-god-toggle--has-exit-once-hook nil
+  "Non-nil if `evil-god-toggle--exit-once` in local `post-command-hook`.")
+
+(defvar evil-god-toggle--last-command nil
+  "Command executed just before entering god state.")
+
+(defvar evil-god-toggle--visual-forward nil
+  "Non-nil if the saved region was selected forward (mark ≤ point).")
+(defvar-local evil-god-toggle--visual-beg nil
+  "Buffer position of region start to restore when toggling back to Evil visual.")
+(defvar-local evil-god-toggle--visual-end nil
+  "Buffer position of region end to restore when toggling back to Evil visual.")
+
 ;;;###autoload
 (define-minor-mode evil-god-toggle-mode
   "Toggleable global mode for Evil/God toggling."
@@ -197,24 +217,6 @@ If already in `god-once', signal a user-error."
   :type 'boolean
   :group 'evil-god-toggle)
 
-(defvar-local evil-god-toggle--visual-hooks-removed nil
-  "Non-nil if evil-god-toggle removed visual mark hooks in this buffer.")
-
-(defvar-local evil-god-toggle--has-fix-last-command-hook nil
-  "Non-nil if `evil-god-toggle--fix-last-command` in local `pre-command-hook`.")
-
-(defvar-local evil-god-toggle--has-exit-once-hook nil
-  "Non-nil if `evil-god-toggle--exit-once` in local `post-command-hook`.")
-
-(defvar evil-god-toggle--last-command nil
-  "Command executed just before entering god state.")
-
-(defvar evil-god-toggle--visual-forward nil
-  "Non-nil if the saved region was selected forward (mark ≤ point).")
-(defvar-local evil-god-toggle--visual-beg nil
-  "Buffer position of region start to restore when toggling back to Evil visual.")
-(defvar-local evil-god-toggle--visual-end nil
-  "Buffer position of region end to restore when toggling back to Evil visual.")
 
 (defun evil-god-toggle--remove-transient-hooks ()
   "Remove God mode transient hooks from all buffers that added them."
@@ -394,7 +396,7 @@ Restores visual selection behavior by adding `evil-visual-activate-hook' to
 
 
 (defun evil-god-toggle--exit-once ()
-  "Exit `god-once` state and return to Evil's previous state, or `normal` if ambiguous."
+  "Exit `god-once` state, return to previous Evil state, or `normal' if ambiguous."
   (let ((cmd this-command)
         (entry-cmd 'evil-god-once-state))
     (unless (memq cmd
