@@ -35,7 +35,8 @@
 ;; - `god': Full persistent God mode.
 ;; - `god-once': Enter God mode for one command, then return to Evil.
 ;; - `god-off': Like evil's built-in emacs state. Easy to switch to and from.
-;;
+;; Home repository:  git://github.com/emacs-evil/evil.git
+;; See README.md there for more detailed documentation.
 ;; Ideal for users blending Emacs and Vim-style modal editing.
 ;;
 ;;; Code:
