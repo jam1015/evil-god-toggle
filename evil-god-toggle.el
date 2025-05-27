@@ -34,7 +34,7 @@
 ;; Provided states:
 ;; - `god': Full persistent God mode.
 ;; - `god-once': Enter God mode for one command, then return to Evil.
-;; - `god-off': Explicitly turns God mode off persistently.
+;; - `god-off': Like evil's built-in emacs state. Easy to switch to and from.
 ;;
 ;; Ideal for users blending Emacs and Vim-style modal editing.
 ;;
