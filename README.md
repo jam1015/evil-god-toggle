@@ -1,7 +1,7 @@
 # evil-god-toggle
 
 ![GPLv3](https://img.shields.io/badge/license-GPL--3.0-blue)
-[![MELPA](https://melpa.org/packages/package-name-badge.svg)](https://melpa.org/#/package-name)
+[![MELPA](https://melpa.org/packages/evil-god-toggle-badge.svg)](https://melpa.org/#/evil-god-toggle)
 
 - [Description](#description)
 - [TL;DR](#tldr)
