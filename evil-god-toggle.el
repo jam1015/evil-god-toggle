@@ -6,7 +6,7 @@
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "28.1") (evil "1.0.8") (god-mode "2.12.0"))
 ;; Keywords: convenience, emulation, evil, god-mode
-;; URL: https://github.com/jam1015/evil-god-toggle
+;; Homepage: https://github.com/jam1015/evil-god-toggle
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -35,10 +35,9 @@
 ;; - `god': Full persistent God mode.
 ;; - `god-once': Enter God mode for one command, then return to Evil.
 ;; - `god-off': Like evil's built-in emacs state. Easy to switch to and from.
-;; Home repository:  git://github.com/emacs-evil/evil.git
-;; See README.md there for more detailed documentation.
 ;; Ideal for users blending Emacs and Vim-style modal editing.
 ;;
+;; Package-Version: 0.1.0
 ;;; Code:
 
 (declare-function evil-change-to-previous-state "evil")
