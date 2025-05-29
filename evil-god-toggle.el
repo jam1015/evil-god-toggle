@@ -1,4 +1,5 @@
 ;;; evil-god-toggle.el --- Toggle Evil and God Mode -*- lexical-binding: t -*-
+;; Version: 0.1.0
 ;;
 ;; Copyright (C) 2025 Jordan Mandel
 ;; Author: Jordan Mandel <jordan.mandel@live.com>
@@ -34,10 +35,9 @@
 ;; Provided states:
 ;; - `god': Full persistent God mode.
 ;; - `god-once': Enter God mode for one command, then return to Evil.
-;; - `god-off': Like evil's built-in emacs state. Easy to switch to and from.
+;; - `god-off': Like evil's built-in Emacs state.  Easy to switch to and from.
 ;; Ideal for users blending Emacs and Vim-style modal editing.
 ;;
-;; Package-Version: 0.1.0
 ;;; Code:
 
 (declare-function evil-change-to-previous-state "evil")
