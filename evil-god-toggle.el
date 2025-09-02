@@ -139,7 +139,7 @@ If called from the minibuffer, signal a user-error."
   (if (minibufferp)
       (user-error "Cannot enter `god-off' mode from minibuffer")
     ;; original behavior
-    (evil-god-toggle--add-transient-hooks t nil)
+    (evil-god-toggle--add-fix-last)
     (setq evil-god-toggle--last-command last-command)
     (evil-god-toggle--maybe-restore-visual 'evil-god-off-state)))
 
@@ -148,7 +148,7 @@ If called from the minibuffer, signal a user-error."
   "Go into God state, preserving visual selection if configured."
   (interactive)
   (setq evil-god-toggle--last-command last-command)
-  (evil-god-toggle--add-transient-hooks t nil)
+  (evil-god-toggle--add-fix-last)
   (evil-god-toggle--maybe-restore-visual  'evil-god-state))
 
 ;;;###autoload
@@ -233,8 +233,6 @@ If already in `god-once', signal a user-error."
   :input-method t :intercept-esc nil)
 
 
-
-
 (defun evil-god-toggle--remove-transient-hooks ()
   "Remove God mode transient hooks from all buffers that added them."
   (dolist (buf (buffer-list))
@@ -246,18 +244,18 @@ If already in `god-once', signal a user-error."
         (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t)
         (setq-local evil-god-toggle--has-exit-once-hook nil)))))
 
-(defun evil-god-toggle--add-transient-hooks (add-fix-last add-exit-once)
-  "Add transient God-mode hooks locally to current buffer.
-ADD-FIX-LAST:
-  non-nil adds `evil-god-toggle--fix-last-command` to `pre-command-hook`.
-ADD-EXIT-ONCE:
-  non-nil adds `evil-god-toggle--exit-once` to `post-command-hook`."
-  (when (and add-fix-last (not evil-god-toggle--has-fix-last-command-hook))
+(defun evil-god-toggle--add-fix-last ()
+  "Add `evil-god-toggle--fix-last-command` to `pre-command-hook`."
+  (unless   (bound-and-true-p evil-god-toggle--has-fix-last-command-hook)
     (add-hook 'pre-command-hook #'evil-god-toggle--fix-last-command nil t)
-    (setq-local evil-god-toggle--has-fix-last-command-hook t))
-  (when (and add-exit-once (not evil-god-toggle--has-exit-once-hook))
+    (setq-local evil-god-toggle--has-fix-last-command-hook t)))
+
+(defun evil-god-toggle--add-exit-once ()
+  "Add `evil-god-toggle--exit-once` to `post-command-hook`."
+  (unless  (bound-and-true-p evil-god-toggle--has-exit-once-hook)
     (add-hook 'post-command-hook #'evil-god-toggle--exit-once nil t)
     (setq-local evil-god-toggle--has-exit-once-hook t)))
+
 
 (defun evil-god-toggle--check-and-update-previous-state-visual ()
   "Set the previous Evil state to `normal' if it was `god' upon entering `visual'.
@@ -323,7 +321,8 @@ previous state."
        evil-god-toggle--once-buffer (current-buffer))
  (evil-god-toggle--remove-visual-hooks)
   ;; either global or local God
-  (evil-god-toggle--add-transient-hooks t t)
+ (evil-god-toggle--add-fix-last)
+ (evil-god-toggle--add-exit-once)
   (evil-god-toggle--enable-god))
 
 (defun evil-god-toggle--once-stop-hook-fun ()
