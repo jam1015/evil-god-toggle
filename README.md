@@ -324,7 +324,7 @@ Here is an example that works with Elpaca's use-package integration:
 
 ## Version/License
 
-- **Version:** 0.1.0
+- **Version:** 0.1.1
 - **Author:** [Jordan Mandel](https://github.com/jam1015/)
 - **License:** GPL-3.0-or-later
 
