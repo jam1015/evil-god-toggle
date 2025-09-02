@@ -1,5 +1,5 @@
 ;;; evil-god-toggle.el --- Toggle Evil and God Mode -*- lexical-binding: t -*-
-;; Version: 0.1.0
+;; Version: 0.1.1
 ;;
 ;; Copyright (C) 2025 Jordan Mandel
 ;; Author: Jordan Mandel <jordan.mandel@live.com>
@@ -313,7 +313,7 @@ previous state."
 (defun evil-god-toggle--fix-last-command ()
 "Internal: Restore `last-command` captured before entering God state."
         (setq last-command evil-god-toggle--last-command)
-        (remove-hook 'pre-command-hook #'evil-god-toggle--fix-last-command))
+        (remove-hook 'pre-command-hook #'evil-god-toggle--fix-last-command t))
 
 (defun evil-god-toggle--once-start-hook-fun ()
   "Run before entering `evil-god-once-state'."
