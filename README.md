@@ -90,9 +90,9 @@ of Evil.
 
 ## User-facing Functions
 
-### `evil-god-toggle-stop-choose-state`
+### `evil-god-toggle-stop-in-god-state-maybe-visual`
 
-**Arguments:** `alternate_target` *(symbol: `'normal`, `'insert`, or
+**Arguments:** `alternate-target` *(symbol: `'normal`, `'insert`, or
 `'visual`)*
 
 **Return Value:** `nil`
@@ -101,7 +101,7 @@ of Evil.
 If a characterwise region is active and `evil-god-toggle-persist-visual`
 is `always` or `to-evil`, it stashes the region bounds/orientation and
 restores visual selection; otherwise it falls back to the specified
-`alternate_target`. Protects against minibuffer invocation.
+`alternate-target`. Protects against minibuffer invocation.
 
 **Intended Purpose:** The recommended exit entry point for keybindings
 (e.g. [Escape]{.kbd}), handling visual persistence and landing in the
@@ -131,8 +131,8 @@ Should be bound to `god` and `god-off` states.
 
 **Return Value:** `nil`
 
-**Description:** Saves the current `last-command`, adds transient hooks
-(to restore `last-command` and exit once if needed), enables God mode
+**Description:** Saves the current `last-command`, adds a transient
+hook (to restore `last-command` ), enables God mode
 (buffer-local or global based on `evil-god-toggle-global`), and enters
 `evil-god-state`. Optionally restores a characterwise visual region on
 entry if `evil-god-toggle-persist-visual` permits.
@@ -281,7 +281,7 @@ Here is an example that works with Elpaca's use-package integration:
     [escape] (lambda ()
                (interactive)
                ;; On exit, land in ‘normal’ state (you can swap to 'insert if you prefer)
-               (evil-god-toggle-stop-choose-state 'normal)))
+               (evil-god-toggle-stop-execute-in-god-state-maybe-visual 'normal)))
 
   ;; 5) A “flip-flop” binding: M-; toggles on/off God mode in any state
   (evil-define-key '(god god-off)
