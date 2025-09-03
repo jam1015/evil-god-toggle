@@ -79,11 +79,6 @@
 (defvar-local evil-god-toggle--visual-hooks-removed nil
   "Non-nil if evil-god-toggle removed visual mark hooks in this buffer.")
 
-(defvar-local evil-god-toggle--has-fix-last-command-hook nil
-  "Non-nil if `evil-god-toggle--fix-last-command` in local `pre-command-hook`.")
-
-(defvar-local evil-god-toggle--has-exit-once-hook nil
-  "Non-nil if `evil-god-toggle--exit-once` in local `post-command-hook`.")
 
 (defvar evil-god-toggle--last-command nil
   "Command executed just before entering god state.")
@@ -246,25 +241,17 @@ it it respects `evil-god-toggle-persist-visual'"
   "Remove God mode transient hooks from all buffers that added them."
   (dolist (buf (buffer-list))
     (with-current-buffer buf
-      (when evil-god-toggle--has-fix-last-command-hook
         (remove-hook 'pre-command-hook #'evil-god-toggle--fix-last-command t)
-
-        (setq-local evil-god-toggle--has-fix-last-command-hook nil))
-      (when evil-god-toggle--has-exit-once-hook
-        (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t)
-        (setq-local evil-god-toggle--has-exit-once-hook nil)))))
+        (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t)))))
 
 (defun evil-god-toggle--add-fix-last ()
   "Add `evil-god-toggle--fix-last-command` to `pre-command-hook`."
-  (unless   (bound-and-true-p evil-god-toggle--has-fix-last-command-hook)
-    (add-hook 'pre-command-hook #'evil-god-toggle--fix-last-command nil t)
-    (setq-local evil-god-toggle--has-fix-last-command-hook t)))
+  ;; add-hook won't add duplicates, so this is safe
+  (add-hook 'pre-command-hook #'evil-god-toggle--fix-last-command nil t))
 
 (defun evil-god-toggle--add-exit-once ()
   "Add `evil-god-toggle--exit-once` to `post-command-hook`."
-  (unless  (bound-and-true-p evil-god-toggle--has-exit-once-hook)
-    (add-hook 'post-command-hook #'evil-god-toggle--exit-once nil t)
-    (setq-local evil-god-toggle--has-exit-once-hook t)))
+  (add-hook 'post-command-hook #'evil-god-toggle--exit-once nil t))
 
 
 (defun evil-god-toggle--check-and-update-previous-state-visual ()
@@ -286,11 +273,10 @@ previous state."
   "Re-add Evil visual activate/deactivate hooks where they were previously removed."
   (dolist (buf (buffer-list))
     (with-current-buffer buf
-      (when (and
-             (bound-and-true-p evil-local-mode)
-             (bound-and-true-p evil-god-toggle--visual-hooks-removed))
-        (evil-god-toggle--add-visual-hooks)
-        (setq-local evil-god-toggle--visual-hooks-removed nil)))))
+      ;; Only restore if evil-local-mode is active and hooks are missing
+      (when (and (bound-and-true-p evil-local-mode)
+                 (not (memq #'evil-visual-activate-hook activate-mark-hook)))
+        (evil-god-toggle--add-visual-hooks)))))
 
 (defun evil-god-toggle--disable-god ()
   "Disable God mode, globally or buffer-locally per `evil-god-toggle-global'."
@@ -362,14 +348,9 @@ previous state."
     (funcall next-state-fn)))
 
 (defun evil-god-toggle--remove-visual-hooks ()
-  "Remove Evil's visual activate/deactivate hooks in current buffer.
-Prevents Evil's visual selection hooks from firing while in God mode.
-`evil-god-toggle--visual-hooks-removed' set to non-nil so we know to restore."
-  (when (or (member #'evil-visual-activate-hook activate-mark-hook)
-          (member #'evil-visual-deactivate-hook deactivate-mark-hook))
+  "Remove Evil's visual activate/deactivate hooks in current buffer."
   (remove-hook 'activate-mark-hook #'evil-visual-activate-hook t)
-  (remove-hook 'deactivate-mark-hook #'evil-visual-deactivate-hook t)
-  (setq-local evil-god-toggle--visual-hooks-removed t)))
+  (remove-hook 'deactivate-mark-hook #'evil-visual-deactivate-hook t))
 
 
 (defun evil-god-toggle--add-visual-hooks ()
