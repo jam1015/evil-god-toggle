@@ -242,7 +242,7 @@ it it respects `evil-god-toggle-persist-visual'"
   (dolist (buf (buffer-list))
     (with-current-buffer buf
         (remove-hook 'pre-command-hook #'evil-god-toggle--fix-last-command t)
-        (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t)))))
+        (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t))))
 
 (defun evil-god-toggle--add-fix-last ()
   "Add `evil-god-toggle--fix-last-command` to `pre-command-hook`."
