@@ -424,9 +424,6 @@ Restores visual selection behavior by adding `evil-visual-activate-hook' to
                          'universal-argument-other-key
                          'digit-argument
                          'negative-argument)))
-        ;; Remove the hook BEFORE transitioning
-        (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t)
-        
         ;; Defer the state transition to break out of current command processing
         (run-with-idle-timer
          0 nil
