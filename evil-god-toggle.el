@@ -76,10 +76,6 @@
   "Keymap for `evil-god-toggle-mode'.")
 
 
-(defvar-local evil-god-toggle--visual-hooks-removed nil
-  "Non-nil if evil-god-toggle removed visual mark hooks in this buffer.")
-
-
 (defvar evil-god-toggle--last-command nil
   "Command executed just before entering god state.")
 
@@ -106,12 +102,29 @@ Creates `god-mode' states for Evil."
     (remove-hook 'evil-visual-state-entry-hook
                  #'evil-god-toggle--check-and-update-previous-state-visual)))
 
+
+;;;; god-state hooks ;;;;;;;;;;
 (evil-define-state god
   "God state." :tag " <G> "
   :message "-- GOD MODE --"
   :entry-hook  evil-god-toggle--start-hook-fun
   :exit-hook   evil-god-toggle--stop-hook-fun
   :input-method t :intercept-esc nil)
+
+(defun evil-god-toggle--start-hook-fun ()
+  "Run before entering `evil-god-state'."
+    (evil-god-toggle--remove-visual-hooks)
+  ;; either global or local God
+  (evil-god-toggle--enable-god))
+
+(defun evil-god-toggle--stop-hook-fun ()
+  "Run before exiting `evil-god-state'."
+  ;; restore visual hooks, then turn off God
+  (evil-god-toggle--remove-transient-hooks)
+  (evil-god-toggle--restore-visual-hooks)
+  (evil-god-toggle--disable-god))
+
+;; god once and hooks ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (evil-define-state god-once
   "God state (once)." :tag " <G (once)> "
@@ -120,12 +133,44 @@ Creates `god-mode' states for Evil."
   :exit-hook   evil-god-toggle--once-stop-hook-fun
   :input-method t :intercept-esc nil)
 
+(defun evil-god-toggle--once-start-hook-fun ()
+  "Run before entering `evil-god-once-state'."
+ (evil-god-toggle--remove-visual-hooks)
+  ;; either global or local God
+  (evil-god-toggle--add-add-exit-once)
+  (evil-god-toggle--enable-god))
+
+(defun evil-god-toggle--once-stop-hook-fun ()
+  "Run before exiting `evil-god-once-state'."
+  ;; restore visual hooks, then turn off God
+  (evil-god-toggle--restore-visual-hooks)
+  (evil-god-toggle--disable-god)
+  (evil-god-toggle--remove-transient-hooks)
+  (evil-normalize-keymaps)
+  )
+
+;; god off and hooks ;;;;;;;;;;;;;;;;;;;;;;;;
+
 (evil-define-state god-off
   "God state (off)." :tag " <G (off)> "
   :message "-- GOD MODE (OFF) --"
   :entry-hook  evil-god-toggle--off-start-hook-fun
   :exit-hook   evil-god-toggle--off-stop-hook-fun
   :input-method t :intercept-esc nil)
+
+(defun evil-god-toggle--off-start-hook-fun ()
+  "Run before entering `evil-god-off-state'."
+  (evil-god-toggle--remove-visual-hooks)
+  ;; either global or local God
+  (evil-god-toggle--disable-god))
+
+(defun evil-god-toggle--off-stop-hook-fun ()
+  "Run before exiting `evil-god-off-state'."
+  ;; same cleanup for God-off exit
+  (evil-god-toggle--restore-visual-hooks))
+
+
+
 
 ;;;###autoload
 (defun evil-god-toggle-god-toggle ()
@@ -184,8 +229,8 @@ Does not respect `evil-god-toggle-persist-visual'"
   (interactive)
   (setq evil-god-toggle--last-command last-command)
   (evil-god-toggle--add-fix-last)
-  (evil-god-toggle--maybe-restore-region  'evil-god-once-state))
-
+  (evil-god-toggle--maybe-restore-region  'evil-god-once-state)
+  )
 
 
 ;;;###autoload
@@ -242,7 +287,10 @@ it it respects `evil-god-toggle-persist-visual'"
   (dolist (buf (buffer-list))
     (with-current-buffer buf
         (remove-hook 'pre-command-hook #'evil-god-toggle--fix-last-command t)
-        (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t))))
+        (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t)
+        (remove-hook 'post-command-hook #'evil-god-toggle--add-exit-once t)
+
+		)))
 
 (defun evil-god-toggle--add-fix-last ()
   "Add `evil-god-toggle--fix-last-command` to `pre-command-hook`."
@@ -253,6 +301,9 @@ it it respects `evil-god-toggle-persist-visual'"
   "Add `evil-god-toggle--exit-once` to `post-command-hook`."
   (add-hook 'post-command-hook #'evil-god-toggle--exit-once nil t))
 
+(defun evil-god-toggle--add-add-exit-once ()
+  "Add hook that adds `evil-god-toggle--exit-once` to `post-command-hook`."
+  (add-hook 'post-command-hook #'evil-god-toggle--add-exit-once nil t))
 
 (defun evil-god-toggle--check-and-update-previous-state-visual ()
   "Set the previous Evil state to `normal' if it was `god' upon entering `visual'.
@@ -290,50 +341,10 @@ previous state."
       (god-mode-all 1)
     (god-local-mode 1)))
 
-(defun evil-god-toggle--start-hook-fun ()
-  "Run before entering `evil-god-state'."
-    (evil-god-toggle--remove-visual-hooks)
-  ;; either global or local God
-  (evil-god-toggle--enable-god))
-
-(defun evil-god-toggle--stop-hook-fun ()
-  "Run before exiting `evil-god-state'."
-  ;; restore visual hooks, then turn off God
-  (evil-god-toggle--remove-transient-hooks)
-  (evil-god-toggle--restore-visual-hooks)
-  (evil-god-toggle--disable-god))
-
-
 (defun evil-god-toggle--fix-last-command ()
 "Internal: Restore `last-command` captured before entering God state."
         (setq last-command evil-god-toggle--last-command)
         (remove-hook 'pre-command-hook #'evil-god-toggle--fix-last-command t))
-
-(defun evil-god-toggle--once-start-hook-fun ()
-  "Run before entering `evil-god-once-state'."
- (evil-god-toggle--remove-visual-hooks)
-  ;; either global or local God
- (evil-god-toggle--add-exit-once)
-  (evil-god-toggle--enable-god))
-
-(defun evil-god-toggle--once-stop-hook-fun ()
-  "Run before exiting `evil-god-once-state'."
-  ;; restore visual hooks, then turn off God
-  (evil-god-toggle--remove-transient-hooks)
-  (evil-god-toggle--restore-visual-hooks)
-  (evil-god-toggle--disable-god))
-
-(defun evil-god-toggle--off-start-hook-fun ()
-  "Run before entering `evil-god-off-state'."
-  (evil-god-toggle--remove-visual-hooks)
-  ;; either global or local God
-  (evil-god-toggle--disable-god))
-
-(defun evil-god-toggle--off-stop-hook-fun ()
-  "Run before exiting `evil-god-off-state'."
-  ;; same cleanup for God-off exit
-  (evil-god-toggle--restore-visual-hooks)
-  (evil-god-toggle--disable-god))
 
 (defun evil-god-toggle--maybe-restore-region (next-state-fn)
   "Switch to NEXT-STATE-FN and optionally restore region if in visual mode."
@@ -398,24 +409,33 @@ Restores visual selection behavior by adding `evil-visual-activate-hook' to
 
 (defun evil-god-toggle--exit-once ()
   "Exit `god-once` state, return to previous Evil state, or `normal' if ambiguous."
-  (let ((cmd this-command)
-        (entry-cmd 'evil-god-once-state))
-    (unless (memq cmd
-                  ;; never exit on the toggle or the state-entry commands,
-                  ;; nor on any of the built-in prefix arguments, or minibuffer
-                  (list
-                   'evil-god-toggle-once
-                   entry-cmd
-                   'universal-argument
-                   'universal-argument-minus
-                   'universal-argument-more
-                   'universal-argument-other-key
-                   'digit-argument
-                   'negative-argument))
-                   ;; also guard against being in the minibuffer:
-                   ;; `minibufferp` is a predicate, not a command, so check it separately
-      (unless (minibufferp)
-        (evil-god-toggle-stop-execute-in-god-state evil-previous-state )))))
+  (if (not (eq evil-state 'god-once))
+      (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t)
+    (let ((cmd this-command)
+          (entry-cmd 'evil-god-once-state))
+      (unless (or (minibufferp)
+                  (memq cmd
+                        (list
+                         'evil-god-toggle-once
+                         entry-cmd
+                         'universal-argument
+                         'universal-argument-minus
+                         'universal-argument-more
+                         'universal-argument-other-key
+                         'digit-argument
+                         'negative-argument)))
+        ;; Remove the hook BEFORE transitioning
+        (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t)
+        
+        ;; Defer the state transition to break out of current command processing
+        (run-with-idle-timer
+         0 nil
+         (lambda ()
+           (let ((target-state evil-previous-state))
+             (when (memq target-state '(god god-once god-off nil))
+               (setq target-state 'normal))
+             (evil-god-toggle-stop-god-choose-state target-state)
+             (evil-normalize-keymaps))))))))
 
 
 (provide 'evil-god-toggle)
