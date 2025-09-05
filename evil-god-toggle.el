@@ -3,7 +3,7 @@
 ;; Copyright (C) 2025 Jordan Mandel
 ;; Author: Jordan Mandel <jordan.mandel@live.com>
 ;; Created: 2025-04-22
-;; Version: 0.1.1
+;; Version: 0.2.1
 ;; Package-Requires: ((emacs "28.1") (evil "1.0.8") (god-mode "2.12.0"))
 ;; Keywords: convenience, emulation, evil, god-mode
 ;; Homepage: https://github.com/jam1015/evil-god-toggle
@@ -198,7 +198,7 @@ If already in `god-once', signal a user-error."
     (user-error "Already in god-once state"))
    ((eq evil-state 'god)
     (user-error "Already in god state"))
-   (t (evil-god-toggle-execute-in-god-once-state))))
+   (t (evil-god-toggle--execute-in-god-once-state))))
 
 
 ;;;###autoload
@@ -214,7 +214,8 @@ If already in `god-once', signal a user-error."
 (defun evil-god-toggle-stop-execute-in-god-state (target)
   "Wrapper for leaving god state and switching to TARGET evil state.
 TARGET should be a symbol: `normal', `insert', or `visual'.
-Does not respect `evil-god-toggle-persist-visual'"
+Does not respect `evil-god-toggle-persist-visual'
+`evil-god-toggle-stop-god-state-maybe-visual' is smarter"
   (interactive)
   (pcase target
     ('normal (evil-god-toggle--transition-to-normal))
@@ -224,7 +225,7 @@ Does not respect `evil-god-toggle-persist-visual'"
   (force-mode-line-update))
 
 ;;;###autoload
-(defun evil-god-toggle-execute-in-god-once-state ()
+(defun evil-god-toggle--execute-in-god-once-state ()
   "Go into God state, preserving visual selection if configured."
   (interactive)
   (setq evil-god-toggle--last-command last-command)
@@ -247,7 +248,7 @@ If called from the minibuffer, signal a user-error."
 
 
 ;;;###autoload
-(defun evil-god-toggle-stop-god-choose-state (alternate-target)
+(defun evil-god-toggle-stop-god-state-maybe-visual (alternate-target)
   "From God, toggle back into Evil, choosing appropriate state.
 Restore visual or going to state specified by `ALTERNATE-TARGET'.
 alternate-target can be `normal', `insert', or `visual'.
@@ -306,18 +307,12 @@ it it respects `evil-god-toggle-persist-visual'"
   (add-hook 'post-command-hook #'evil-god-toggle--add-exit-once nil t))
 
 (defun evil-god-toggle--check-and-update-previous-state-visual ()
-  "Set the previous Evil state to `normal' if it was `god' upon entering `visual'.
-When Evil transitions into `visual' state from `god', it may
-incorrectly keep `god' as the previous state.  This function checks
-if `evil-previous-state' is `god', resets it to `normal', and updates
-`evil-previous-state-alist' accordingly.  Put this on
-`evil-visual-state-entry-hook' to ensure Evil retains the correct
-previous state."
-  (when (eq evil-previous-state 'god)
-    (setq evil-previous-state 'normal)
-    (setq evil-previous-state-alist
-          (assq-delete-all 'god evil-previous-state-alist))
-    (add-to-list 'evil-previous-state-alist (cons 'god 'normal))))
+  "Set the previous Evil state to `normal' if it was `god' or `god-once' upon entering `visual'.
+When Evil transitions into `visual' state from `god' or `god-once', it may
+incorrectly keep those as the previous state. This function resets it to `normal'
+so that exiting visual returns to normal instead of a god state."
+  (when (memq evil-previous-state '(god god-once))
+    (setq evil-previous-state 'normal)))
 
 
 (defun evil-god-toggle--restore-visual-hooks ()
@@ -431,7 +426,7 @@ Restores visual selection behavior by adding `evil-visual-activate-hook' to
            (let ((target-state evil-previous-state))
              (when (memq target-state '(god god-once god-off nil))
                (setq target-state 'normal))
-             (evil-god-toggle-stop-god-choose-state target-state)
+             (evil-god-toggle-stop-god-state-maybe-visual target-state)
              (evil-normalize-keymaps))))))))
 
 

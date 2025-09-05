@@ -64,40 +64,39 @@ Mode that contains the map to which the user should assign all keymaps to comman
 
 ## New Evil States Introduced
 
-### `god-mode`
+### `god`
 
 Emacs should function just like if you were in god mode, but it is now a state
-of Evil mode on the same level with Normal mode and insert mode
+of Evil on the same level with Normal and Insert.
 
 
-### `god-off-mode`
+### `god-off`
 
-Basically an Evil mode with no keybindings, very similar to the 'Emacs Mode' of
+Basically an Evil state with no keybindings, very similar to the `Emacs State` of
 Evil that you reach with `C-z`.  This is included as a clean state that is easy
-to switch back and forth between with `god-mode`, whereas `Emacs Mode` has
+to switch back and forth between from `god`, whereas `Emacs State` has
 previously presented challenges regarding state transitions to the author of
-this plugin.
+this plugin. Useful for text insertion.
 
 
-### `god-once-mode`
+### `god-once`
 
-Execute a single command in god mode and then switch back to the previous mode
+Execute a single command in god mode and then switch back to the previous state
 of Evil.
 
 
-## User-facing Functions
 
 
 ## User-facing Functions
 
-### `evil-god-toggle-stop-in-god-state-maybe-visual`
+### `evil-god-toggle-stop-god-state-maybe-visual`
 
 **Arguments:** `alternate-target` *(symbol: `'normal`, `'insert`, or
 `'visual`)*
 
 **Return Value:** `nil`
 
-**Description:** Exits God mode and chooses the destination Evil state.
+**Description:** Exits God and chooses the destination Evil state.
 If a characterwise region is active and `evil-god-toggle-persist-visual`
 is `always` or `to-evil`, it stashes the region bounds/orientation and
 restores visual selection; otherwise it falls back to the specified
@@ -116,13 +115,13 @@ correct Evil state.
 **Return Value:** `nil`
 
 **Description:** If invoked from the minibuffer, signals a user error.
-Otherwise, toggles God mode on or off: if currently in God state, calls
+Otherwise, toggles God on or off: if currently in God state, calls
 `evil-god-toggle-execute-in-god-off-state`; otherwise calls
 `evil-god-toggle-execute-in-god-state`. Preserves any active visual
 region according to `evil-god-toggle-persist-visual`.
 
 **Intended Purpose:** A single flip-flop entry point to switch
-seamlessly between Evil and God modes.
+seamlessly between Evil and God.
 Should be bound to `god` and `god-off` states.
 
 ### `evil-god-toggle-execute-in-god-state`
@@ -132,12 +131,12 @@ Should be bound to `god` and `god-off` states.
 **Return Value:** `nil`
 
 **Description:** Saves the current `last-command`, adds a transient
-hook (to restore `last-command` ), enables God mode
+hook (to restore `last-command` ), enables God
 (buffer-local or global based on `evil-god-toggle-global`), and enters
 `evil-god-state`. Optionally restores a characterwise visual region on
 entry if `evil-god-toggle-persist-visual` permits.
 
-**Intended Purpose:** Enter persistent God mode from any Evil state,
+**Intended Purpose:** Enter persistent God state from any Evil state,
 with optional visual-selection persistence.
 
 ### `evil-god-toggle-execute-in-god-off-state`
@@ -147,12 +146,12 @@ with optional visual-selection persistence.
 **Return Value:** `nil`
 
 **Description:** Saves the current `last-command`, adds transient hooks,
-disables God mode while entering the `god-off` state, and then
+disables God while entering the `god-off` state, and then
 optionally restores any active visual region according to
 `evil-god-toggle-persist-visual`.
 
 **Intended Purpose:** Provide a clean "God-off" state (akin to Emacs
-state) that can be toggled back into God mode.
+state) that can be toggled back into God.
 
 ### `evil-god-toggle-stop-execute-in-god-state`
 
@@ -167,9 +166,10 @@ active region, invokes the matching transition function
 updates the mode line.
 
 **Intended Purpose:** Used by keybindings and other functions to perform
-the actual state switch when leaving God modes.
+the actual state switch when leaving God.
 
 ***Does not respect `evil-god-toggle-persist-visual`***.
+***Better to use `evil-god-toggle-stop-god-state-maybe-visual`***
 
 
 ### `evil-god-toggle-once`
@@ -181,10 +181,10 @@ the actual state switch when leaving God modes.
 **Description:** Enters a temporary God state for exactly one non-prefix
 command. Saves `last-command`, installs `pre-command-hook` and
 `post-command-hook` to restore the previous Evil state after that
-command, and enables God mode. Signals an error if already in `god` or
+command, and enables God. Signals an error if already in `god` or
 `god-once` or if invoked from the minibuffer.
 
-**Intended Purpose:** Provide quick, one-shot access to God mode without
+**Intended Purpose:** Provide quick, one-shot access to God without
 needing to toggle back manually.
 
 
@@ -196,11 +196,11 @@ needing to toggle back manually.
 **Return Value:** `nil`
 
 **Description:** Immediately aborts any God or god-once session by
-removing all transient hooks, disabling God mode, and forcing Evil
+removing all transient hooks, disabling God, and forcing Evil
 normal state.
 
 **Intended Purpose:** Emergency escape to ensure you return to Evil
-normal mode regardless of current God toggles.
+Normal state regardless of current God toggles.
 
 ### Customizations
 
@@ -213,7 +213,7 @@ customization group.
     `(choice (const :tag "Always" always) (const :tag "To God" to-god) (const :tag "To Evil" to-evil) (const :tag "Never" nil))`
 -   **Default:** `always`
 -   **Description:** Controls whether and when an existing visual
-    selection or active region is preserved when toggling between Evil and God modes.
+    selection or active region is preserved when toggling between Evil and God states.
     -   `always` -- keep the region on both entry and exit.
     -   `to-god` -- preserve only when entering God.
     -   `to-evil` -- preserve only when returning to Evil.
@@ -225,7 +225,7 @@ customization group.
 
 -   **Type:** `boolean`
 -   **Default:** `nil`
--   **Description:** When non‑nil, toggling God mode uses
+-   **Description:** When non‑nil, toggling God state uses
     `god-mode-all` (affecting all buffers) instead of the
     buffer‑local `god-local-mode`.
 
@@ -246,85 +246,78 @@ Here is an example that works with Elpaca's use-package integration:
 
 ```el
 (use-package evil-god-toggle
-  :ensure (:host github :repo "jam1015/evil-god-toggle")
-  :after (evil god-mode which-key)
-
-  ;;—————— Initialization ——————
+  :ensure (:host github
+           :repo "jam1015/evil-god-toggle")
+  :after (evil god-mode )
   :init
-  ;; (Optionally tweak any defcustoms here, before the package loads.)
-  ;; For example, to set visual-selection persistence or global mode:
-  ;; (setq evil-god-toggle-persist-visual 'always
-  ;;       evil-god-toggle-global        t)
-
-  ;;—————— Configuration ——————
+  
   :config
-  ;; 1) Turn on the minor mode so its keymap & lighter are active:
+  ;; 1. Enable the global minor mode (so its keymap + lighter are active)
   (evil-god-toggle-mode 1)
 
-  ;; 2) Toggle into “full” God mode from Normal/Insert:
-  (evil-define-key '(normal insert)
+  ;; 2. Enter persistent god mode from Normal/Insert/God-off states with C-;
+  (evil-define-key '(normal insert god-off)
     evil-god-toggle-mode-map
-    ;; C-; → enter persistent god-mode
-    (kbd "C-;") #'evil-god-toggle-execute-in-god-state)
+    (kbd "C-;") (lambda ()
+                  (interactive)
+                  (evil-god-toggle-execute-in-god-state)))
 
-
-
-  ;; 3) From within God mode, go back to the previous Evil state:
+  ;; 3. Exit god mode to god-off state with C-; 
   (evil-define-key 'god
     evil-god-toggle-mode-map
-    ;; C-; → change back to whatever state was active before
-    (kbd "C-;") #'evil-change-to-previous-state)
+    (kbd "C-;") (lambda ()
+                  (interactive)
+                  (evil-god-toggle-execute-in-god-off-state)))
 
-  ;; 4) Bind Escape in both god & god-off states to return to Normal:
-  (evil-define-key '(god god-off)
+  ;; 4. Escape from any god state returns to Normal
+  (evil-define-key '(god god-off god-once)
     evil-god-toggle-mode-map
     [escape] (lambda ()
                (interactive)
-               ;; On exit, land in ‘normal’ state (you can swap to 'insert if you prefer)
-               (evil-god-toggle-stop-execute-in-god-state-maybe-visual 'normal)))
+               (evil-god-toggle-stop-god-state-maybe-visual 'normal)))
 
-  ;; 5) A “flip-flop” binding: M-; toggles on/off God mode in any state
-  (evil-define-key '(god god-off)
+  ;; 5. One-shot God mode: C-, in Normal for exactly one command
+  (evil-define-key 'normal
     evil-god-toggle-mode-map
-    (kbd "M-;") #'evil-god-toggle-god-toggle)
+    (kbd "C-,") (lambda ()
+                  (interactive)
+                  (evil-god-toggle-once)))
 
-;; instead of `evil-god-toggle-god-toggle can bind to individual states
-;;  ;; 5.1)
-;;  (evil-define-key 'god-off
-;;    evil-god-toggle-mode-map
-;;    (kbd "M-;") #'evil-god-toggle-execute-in-god-state)
-;;
-;;
-;;  ;; 5.2)
-;;  (evil-define-key 'god
-;;    evil-god-toggle-mode-map
-;;    (kbd "M-;") #'evil-god-toggle-execute-in-god-off-state)
-
-  ;; 6) One-shot God: press C-, in Normal/Insert to enter for exactly one command
-  (evil-define-key '(normal insert)
-    evil-god-toggle-mode-map
-    (kbd "C-,") #'evil-god-toggle-once)
-
-  ;;—————— Custom options ——————
-  ;; Preserve any active region when toggling modes:
+  ;; 6. Visual persistence and global flag settings
   (setq evil-god-toggle-persist-visual 'always
-        ;; Make god-mode global (applies to all buffers) instead of buffer-local:
-        evil-god-toggle-global        t)
-
-  ;;—————— Optional cursor styling ——————
-  ;; (setq evil-god-state-cursor     '(box    "Red")
-  ;;       evil-god-off-state-cursor '(bar    "Green")
-  ;;       evil-insert-state-cursor '(bar    "Red")
-  ;;       evil-visual-state-cursor '(hollow "Red")
-  ;;       evil-normal-state-cursor '(hollow "Black"))
-  )
+        evil-god-toggle-global t))
 ```
 
+## Other Notes
+
+### Mode Hook Behavior
+
+When `evil-god-toggle-mode` is enabled, it automatically adds a hook to
+`evil-visual-state-entry-hook` that prevents getting stuck in god states
+when leaving visual mode. This hook
+(`evil-god-toggle--check-and-update-previous-state-visual`) ensures that
+when entering visual state from `god` or `god-once`, the previous state
+is reset to `normal`, so exiting visual mode returns you to normal state
+rather than back to a god state.
+
+This behavior is automatic and requires no user configuration.
+
+### State Tag Display
+
+Each god state displays a distinctive tag in the mode line to indicate
+the current state:
+
+-   **god state:** `" <G> "`
+-   **god-once state:** `" <G (once)> "`
+-   **god-off state:** `" <G (off)> "` 
+
+These tags appear in the mode line alongside other Evil state indicators
+and help you identify which god-related state is currently active.
 
 
 ## Version/License
 
-- **Version:** 0.1.1
+- **Version:** 0.2.1
 - **Author:** [Jordan Mandel](https://github.com/jam1015/)
 - **License:** GPL-3.0-or-later
 
@@ -344,3 +337,8 @@ pull request.
 - evil-collection:    https://github.com/emacs-evil/evil-collection
 - god-mode:           https://github.com/emacsorphanage/god-mode
 - evil-god-state:     https://github.com/gridaphobe/evil-god-state
+
+AI-created plugin that changes the cursor color for different evil states. I use it in my personal config:
+- cursor-contraster:  https://github.com/jam1015/cursor-contraster
+
+
