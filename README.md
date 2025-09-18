@@ -317,7 +317,7 @@ and help you identify which god-related state is currently active.
 
 ## Version/License
 
-- **Version:** 0.2.1
+- **Version:** 0.2.2
 - **Author:** [Jordan Mandel](https://github.com/jam1015/)
 - **License:** GPL-3.0-or-later
 

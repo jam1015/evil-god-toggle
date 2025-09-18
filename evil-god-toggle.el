@@ -3,7 +3,7 @@
 ;; Copyright (C) 2025 Jordan Mandel
 ;; Author: Jordan Mandel <jordan.mandel@live.com>
 ;; Created: 2025-04-22
-;; Version: 0.2.1
+;; Version: 0.2.2
 ;; Package-Requires: ((emacs "28.1") (evil "1.0.8") (god-mode "2.12.0"))
 ;; Keywords: convenience, emulation, evil, god-mode
 ;; Homepage: https://github.com/jam1015/evil-god-toggle
@@ -289,9 +289,7 @@ it it respects `evil-god-toggle-persist-visual'"
     (with-current-buffer buf
         (remove-hook 'pre-command-hook #'evil-god-toggle--fix-last-command t)
         (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t)
-        (remove-hook 'post-command-hook #'evil-god-toggle--add-exit-once t)
-
-		)))
+        (remove-hook 'post-command-hook #'evil-god-toggle--add-exit-once t))))
 
 (defun evil-god-toggle--add-fix-last ()
   "Add `evil-god-toggle--fix-last-command` to `pre-command-hook`."
@@ -342,12 +340,14 @@ so that exiting visual returns to normal instead of a god state."
         (remove-hook 'pre-command-hook #'evil-god-toggle--fix-last-command t))
 
 (defun evil-god-toggle--maybe-restore-region (next-state-fn)
-  "Switch to NEXT-STATE-FN and optionally restore region if in visual mode."
+  "Switch to NEXT-STATE-FN and optionally restore region if in visual mode.
+Skip restoration if in visual block mode since block selections have
+different semantics."
   (if (and (evil-visual-state-p)
+           (not (eq evil-visual-selection 'block))  ; Skip for visual block
            (memq evil-god-toggle-persist-visual '(always to-god)))
       (let ((mrk (mark))
             (pnt (point)))
-
         (funcall next-state-fn)
         (set-mark mrk)
         (goto-char pnt))
