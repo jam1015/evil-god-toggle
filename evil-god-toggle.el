@@ -381,6 +381,18 @@ Restores visual selection behavior by adding `evil-visual-activate-hook' to
 
 (defun evil-god-toggle--transition-to-visual ()
   "Enter Evil visual (charwise), restoring any stashed region & orientation."
+(if (bound-and-true-p rectangle-mark-mode)
+      (progn
+        (setq evil-god-toggle--visual-beg nil
+         evil-god-toggle--visual-end nil
+         evil-god-toggle--visual-forward nil)
+        (deactivate-mark)
+        (run-with-idle-timer
+         0 nil
+         (lambda()
+        (evil-normal-state)))
+
+        ))
   (when (region-active-p)
     (deactivate-mark))
   (if (and evil-god-toggle--visual-beg
@@ -398,9 +410,8 @@ Restores visual selection behavior by adding `evil-visual-activate-hook' to
         (setq evil-god-toggle--visual-beg nil
               evil-god-toggle--visual-end nil
               evil-god-toggle--visual-forward nil))
-    ;; fallback: exactly like pressing `v` in normal
+    ;; fallback: exactly like pressing v in normal
     (evil-visual-char)))
-
 
 (defun evil-god-toggle--exit-once ()
   "Exit `god-once` state, return to previous Evil state, or `normal' if ambiguous."
@@ -428,6 +439,7 @@ Restores visual selection behavior by adding `evil-visual-activate-hook' to
                (setq target-state 'normal))
              (evil-god-toggle-stop-god-state-maybe-visual target-state)
              (evil-normalize-keymaps))))))))
+
 
 
 (provide 'evil-god-toggle)
