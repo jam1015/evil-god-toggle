@@ -146,8 +146,7 @@ Creates `god-mode' states for Evil."
   (evil-god-toggle--restore-visual-hooks)
   (evil-god-toggle--disable-god)
   (evil-god-toggle--remove-transient-hooks)
-  (evil-normalize-keymaps)
-  )
+  (evil-normalize-keymaps))
 
 ;; god off and hooks ;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -224,14 +223,12 @@ Does not respect `evil-god-toggle-persist-visual'
     (_       (evil-god-toggle--transition-to-normal))) ;; fallback
   (force-mode-line-update))
 
-;;;###autoload
 (defun evil-god-toggle--execute-in-god-once-state ()
   "Go into God state, preserving visual selection if configured."
   (interactive)
   (setq evil-god-toggle--last-command last-command)
   (evil-god-toggle--add-fix-last)
-  (evil-god-toggle--maybe-restore-region  'evil-god-once-state)
-  )
+  (evil-god-toggle--maybe-restore-region  'evil-god-once-state))
 
 
 ;;;###autoload
