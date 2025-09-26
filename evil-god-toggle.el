@@ -3,7 +3,7 @@
 ;; Copyright (C) 2025 Jordan Mandel
 ;; Author: Jordan Mandel <jordan.mandel@live.com>
 ;; Created: 2025-04-22
-;; Version: 0.2.2
+;; Version: 0.2.3
 ;; Package-Requires: ((emacs "28.1") (evil "1.0.8") (god-mode "2.12.0"))
 ;; Keywords: convenience, emulation, evil, god-mode
 ;; Homepage: https://github.com/jam1015/evil-god-toggle
@@ -79,7 +79,7 @@
 (defvar evil-god-toggle--last-command nil
   "Command executed just before entering god state.")
 
-(defvar evil-god-toggle--visual-forward nil
+(defvar-local evil-god-toggle--visual-forward nil
   "Non-nil if the saved region was selected forward (mark ≤ point).")
 (defvar-local evil-god-toggle--visual-beg nil
   "Buffer position of region start to restore when toggling back to Evil visual.")
@@ -122,7 +122,8 @@ Creates `god-mode' states for Evil."
   ;; restore visual hooks, then turn off God
   (evil-god-toggle--remove-transient-hooks)
   (evil-god-toggle--restore-visual-hooks)
-  (evil-god-toggle--disable-god))
+  (evil-god-toggle--disable-god)
+  (evil-normalize-keymaps))
 
 ;; god once and hooks ;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -277,8 +278,6 @@ it it respects `evil-god-toggle-persist-visual'"
   ;; exit God
   (evil-god-toggle--stop-hook-fun)
   (evil-god-toggle-stop-execute-in-god-state 'normal))
-
-
 
 (defun evil-god-toggle--remove-transient-hooks ()
   "Remove God mode transient hooks from all buffers that added them."

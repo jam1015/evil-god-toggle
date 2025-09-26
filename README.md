@@ -202,7 +202,7 @@ normal state.
 **Intended Purpose:** Emergency escape to ensure you return to Evil
 Normal state regardless of current God toggles.
 
-### Customizations
+## Customizations
 
 All of the following variables live in the `evil-god-toggle`
 customization group.
