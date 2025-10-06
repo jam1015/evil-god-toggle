@@ -3,7 +3,7 @@
 ;; Copyright (C) 2025 Jordan Mandel
 ;; Author: Jordan Mandel <jordan.mandel@live.com>
 ;; Created: 2025-04-22
-;; Version: 1.0.0
+;; Version: 1.1.0
 ;; Package-Requires: ((emacs "28.1") (evil "1.0.8") (god-mode "2.12.0"))
 ;; Keywords: convenience, emulation, evil, god-mode
 ;; Homepage: https://github.com/jam1015/evil-god-toggle
@@ -182,10 +182,11 @@ Optional helper function."
      (t (evil-god-toggle-execute-in-god-state)))))
 
 ;;;###autoload
-(defun evil-god-toggle-once ()
+(defun evil-god-toggle-once (&optional move-forward)
   "Enter God mode for exactly one command, then return to Evil.
+If MOVE-FORWARD is non-nil, move cursor one character forward after entering.
 If already in `god-once', signal a user-error."
-  (interactive)
+  (interactive "P")
   (cond
    ((minibufferp)
     (user-error "Cannot enter god-once mode from minibuffer"))
@@ -193,16 +194,26 @@ If already in `god-once', signal a user-error."
     (user-error "Already in god-once state"))
    ((eq evil-state 'god)
     (user-error "Already in god state"))
-   (t (evil-god-toggle--execute-in-god-once-state))))
+   (t (evil-god-toggle--execute-in-god-once-state move-forward))))
 
 
 ;;;###autoload
-(defun evil-god-toggle-execute-in-god-state ()
-  "Go into God state, preserving visual selection if configured."
-  (interactive)
+(defun evil-god-toggle-execute-in-god-state (&optional move-forward)
+  "Go into God state, preserving visual selection if configured.
+If MOVE-FORWARD is non-nil, move cursor one character forward after entering."
+  (interactive "P")
   (setq evil-god-toggle--last-command last-command)
   (evil-god-toggle--add-fix-last)
-  (evil-god-toggle--maybe-restore-region  'evil-god-state))
+  (evil-god-toggle--maybe-restore-region 'evil-god-state)
+  (when move-forward
+    (forward-char 1)))
+
+;;;###autoload
+(defun evil-god-toggle-execute-in-god-state-forward ()
+  "Enter God state and move forward one character."
+  (interactive)
+  (evil-god-toggle-execute-in-god-state t))
+
 
 
 ;;;###autoload
@@ -219,12 +230,21 @@ Does not respect `evil-god-toggle-persist-visual'
     (_       (evil-god-toggle--transition-to-normal))) ;; fallback
   (force-mode-line-update))
 
-(defun evil-god-toggle--execute-in-god-once-state ()
-  "Go into God state, preserving visual selection if configured."
-  (interactive)
+(defun evil-god-toggle--execute-in-god-once-state (&optional move-forward)
+  "Go into God-once state, preserving visual selection if configured.
+If MOVE-FORWARD is non-nil, move cursor one character forward after entering."
+  (interactive "P")
   (setq evil-god-toggle--last-command last-command)
   (evil-god-toggle--add-fix-last)
-  (evil-god-toggle--maybe-restore-region  'evil-god-once-state))
+  (evil-god-toggle--maybe-restore-region 'evil-god-once-state)
+  (when move-forward
+    (forward-char 1)))
+
+;;;###autoload
+(defun evil-god-toggle-once-forward ()
+  "Enter God-once state and move forward one character."
+  (interactive)
+  (evil-god-toggle-once t))
 
 
 ;;;###autoload

@@ -126,17 +126,35 @@ Should be bound to `god` and `god-off` states.
 
 ### `evil-god-toggle-execute-in-god-state`
 
-**Arguments:** None (interactive)
+**Arguments:** `&optional move-forward` *(interactive, prefix argument)*
 
 **Return Value:** `nil`
 
 **Description:** Saves the current `last-command`, adds a transient
-hook (to restore `last-command` ), enables God (buffer-local), and 
+hook (to restore `last-command`), enables God (buffer-local), and 
 enters `evil-god-state`. Optionally restores a characterwise
 visual region on entry if `evil-god-toggle-persist-visual` permits.
+If `move-forward` is non-nil, moves cursor one character forward after
+entering the state. This is useful when at the end of a line in Evil
+normal mode, where God mode can access one extra character position.
 
 **Intended Purpose:** Enter persistent God state from any Evil state,
-with optional visual-selection persistence.
+with optional visual-selection persistence and cursor advancement.
+
+
+### `evil-god-toggle-execute-in-god-state-forward`
+
+**Arguments:** None (interactive)
+
+**Return Value:** `nil`
+
+**Description:** Convenience function that enters persistent God state
+and moves the cursor one character forward. Equivalent to calling
+`evil-god-toggle-execute-in-god-state` with a non-nil argument.
+
+**Intended Purpose:** Provide a dedicated function for entering God
+state with cursor advancement, useful for keybindings when working at
+the end of lines.
 
 ### `evil-god-toggle-execute-in-god-off-state`
 
@@ -171,22 +189,39 @@ the actual state switch when leaving God.
 ***Better to use `evil-god-toggle-stop-god-state-maybe-visual`***
 
 
+
 ### `evil-god-toggle-once`
 
-**Arguments:** None (interactive)
+**Arguments:** `&optional move-forward` *(interactive, prefix argument)*
 
 **Return Value:** `nil` (or error if already in God state or minibuffer)
 
 **Description:** Enters a temporary God state for exactly one non-prefix
 command. Saves `last-command`, installs `pre-command-hook` and
 `post-command-hook` to restore the previous Evil state after that
-command, and enables God. Signals an error if already in `god` or
-`god-once` or if invoked from the minibuffer.
+command, and enables God. If `move-forward` is non-nil, moves cursor
+one character forward after entering the state. Signals an error if
+already in `god` or `god-once` or if invoked from the minibuffer.
 
 **Intended Purpose:** Provide quick, one-shot access to God without
-needing to toggle back manually.
+needing to toggle back manually, with optional cursor advancement for
+end-of-line scenarios.
 
 
+
+### `evil-god-toggle-once-forward`
+
+**Arguments:** None (interactive)
+
+**Return Value:** `nil`
+
+**Description:** Convenience function that enters God-once state and
+moves the cursor one character forward. Equivalent to calling
+`evil-god-toggle-once` with a non-nil argument.
+
+**Intended Purpose:** Provide a dedicated function for one-shot God
+mode with cursor advancement, useful for keybindings when working at
+the end of lines.
 
 ### `evil-god-toggle-bail`
 
@@ -277,6 +312,18 @@ Here is an example that works with Elpaca's use-package integration:
 
   ;; 6. Visual persistence
   (setq evil-god-toggle-persist-visual 'always))
+  
+   ;; 7. Alternative: Enter god mode and move forward one character
+  ;;    Useful when cursor is at end of line in normal mode
+  (evil-define-key 'normal
+    evil-god-toggle-mode-map
+    (kbd "C-M-;") #'evil-god-toggle-execute-in-god-state-forward)
+
+  ;; 8. Alternative: One-shot God mode with forward movement
+  (evil-define-key 'normal
+    evil-god-toggle-mode-map
+    (kbd "C-M-,") #'evil-god-toggle-once-forward)
+  
 ```
 
 ## Other Notes
@@ -305,10 +352,23 @@ the current state:
 These tags appear in the mode line alongside other Evil state indicators
 and help you identify which god-related state is currently active.
 
+### Cursor Position at End of Line
+
+In Evil's normal mode, the cursor rests ON the last character of a line,
+while Emacs (and God mode) allows the cursor to be positioned AFTER the
+last character. When entering God or God-once states from the end of a
+line, you may want to access that extra position.
+
+The functions `evil-god-toggle-execute-in-god-state` and
+`evil-god-toggle-once` accept an optional `move-forward` argument (via
+prefix argument when called interactively) to advance the cursor one
+character after entering the state. Convenience functions
+`evil-god-toggle-execute-in-god-state-forward` and
+`evil-god-toggle-once-forward` are also provided for direct keybinding.
 
 ## Version/License
 
-- **Version:** 1.0.0
+- **Version:** 1.1.0
 - **Author:** [Jordan Mandel](https://github.com/jam1015/)
 - **License:** GPL-3.0-or-later
 
