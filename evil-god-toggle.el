@@ -3,7 +3,7 @@
 ;; Copyright (C) 2025 Jordan Mandel
 ;; Author: Jordan Mandel <jordan.mandel@live.com>
 ;; Created: 2025-04-22
-;; Version: 0.2.3
+;; Version: 1.0.0
 ;; Package-Requires: ((emacs "28.1") (evil "1.0.8") (god-mode "2.12.0"))
 ;; Keywords: convenience, emulation, evil, god-mode
 ;; Homepage: https://github.com/jam1015/evil-god-toggle
@@ -66,11 +66,6 @@
                  (const :tag "Never" nil))
   :group 'evil-god-toggle)
 
-;;;###autoload
-(defcustom evil-god-toggle-global nil
-  "If non-nil, use `god-mode-all` instead of `god-local-mode` (per-buffer)."
-  :type 'boolean
-  :group 'evil-god-toggle)
 
 (defvar evil-god-toggle-mode-map (make-sparse-keymap)
   "Keymap for `evil-god-toggle-mode'.")
@@ -319,16 +314,12 @@ so that exiting visual returns to normal instead of a god state."
         (evil-god-toggle--add-visual-hooks)))))
 
 (defun evil-god-toggle--disable-god ()
-  "Disable God mode, globally or buffer-locally per `evil-god-toggle-global'."
-  (if evil-god-toggle-global
-      (god-mode-all -1)
-    (god-local-mode -1)))
+  "Disable God mode."
+    (god-local-mode -1))
 
 (defun evil-god-toggle--enable-god ()
-  "Enable God mode, either globally or buffer-locally per `evil-god-toggle-global'."
-  (if evil-god-toggle-global
-      (god-mode-all 1)
-    (god-local-mode 1)))
+  "Enable God mode."
+    (god-local-mode 1))
 
 (defun evil-god-toggle--fix-last-command ()
 "Internal: Restore `last-command` captured before entering God state."
@@ -413,28 +404,20 @@ Restores visual selection behavior by adding `evil-visual-activate-hook' to
   "Exit `god-once` state, return to previous Evil state, or `normal' if ambiguous."
   (if (not (eq evil-state 'god-once))
       (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t)
-    (let ((cmd this-command)
-          (entry-cmd 'evil-god-once-state))
-      (unless (or (minibufferp)
-                  (memq cmd
-                        (list
-                         'evil-god-toggle-once
-                         entry-cmd
-                         'universal-argument
-                         'universal-argument-minus
-                         'universal-argument-more
-                         'universal-argument-other-key
-                         'digit-argument
-                         'negative-argument)))
-        ;; Defer the state transition to break out of current command processing
-        (run-with-idle-timer
-         0 nil
-         (lambda ()
-           (let ((target-state evil-previous-state))
-             (when (memq target-state '(god god-once god-off nil))
-               (setq target-state 'normal))
-             (evil-god-toggle-stop-god-state-maybe-visual target-state)
-             (evil-normalize-keymaps))))))))
+    ;; Only exit if we're not building a prefix command
+    (when (and (not (minibufferp))
+               (not (memq this-command '(evil-god-toggle-once evil-god-once-state)))
+               ;; This is the key: no prefix is being built
+               (not prefix-arg))
+      ;; Defer the state transition
+      (run-with-idle-timer
+       0 nil
+       (lambda ()
+         (let ((target-state evil-previous-state))
+           (when (memq target-state '(god god-once god-off nil))
+             (setq target-state 'normal))
+           (evil-god-toggle-stop-god-state-maybe-visual target-state)
+           (evil-normalize-keymaps)))))))
 
 
 

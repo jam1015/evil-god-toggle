@@ -131,10 +131,9 @@ Should be bound to `god` and `god-off` states.
 **Return Value:** `nil`
 
 **Description:** Saves the current `last-command`, adds a transient
-hook (to restore `last-command` ), enables God
-(buffer-local or global based on `evil-god-toggle-global`), and enters
-`evil-god-state`. Optionally restores a characterwise visual region on
-entry if `evil-god-toggle-persist-visual` permits.
+hook (to restore `last-command` ), enables God (buffer-local), and 
+enters `evil-god-state`. Optionally restores a characterwise
+visual region on entry if `evil-god-toggle-persist-visual` permits.
 
 **Intended Purpose:** Enter persistent God state from any Evil state,
 with optional visual-selection persistence.
@@ -221,13 +220,6 @@ customization group.
 
     *Note*: This only works with characterwise visual selection/active regions, not linewise selections or blockwise.
 
-### `evil-god-toggle-global`
-
--   **Type:** `boolean`
--   **Default:** `nil`
--   **Description:** When non‑nil, toggling God state uses
-    `god-mode-all` (affecting all buffers) instead of the
-    buffer‑local `god-local-mode`.
 
 
 ## Depends-On
@@ -283,9 +275,8 @@ Here is an example that works with Elpaca's use-package integration:
                   (interactive)
                   (evil-god-toggle-once)))
 
-  ;; 6. Visual persistence and global flag settings
-  (setq evil-god-toggle-persist-visual 'always
-        evil-god-toggle-global t))
+  ;; 6. Visual persistence
+  (setq evil-god-toggle-persist-visual 'always))
 ```
 
 ## Other Notes
@@ -317,7 +308,7 @@ and help you identify which god-related state is currently active.
 
 ## Version/License
 
-- **Version:** 0.2.2
+- **Version:** 1.0.0
 - **Author:** [Jordan Mandel](https://github.com/jam1015/)
 - **License:** GPL-3.0-or-later
 
