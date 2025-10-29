@@ -67,6 +67,19 @@
   :group 'evil-god-toggle)
 
 
+
+;; customization options
+;;;###autoload
+(defcustom evil-god-toggle-persist-visual-once 'follow
+  "Control persistence of visual selection when toggling."
+  :type '(choice (const :tag "Always" always)
+                 (const :tag "To God" to-god)
+                 (const :tag "To Evil" to-evil)
+                 (const :tag "Follow" follow)
+                 (const :tag "Never" nil))
+  :group 'evil-god-toggle)
+
+
 (defvar evil-god-toggle-mode-map (make-sparse-keymap)
   "Keymap for `evil-god-toggle-mode'.")
 
@@ -204,7 +217,7 @@ If MOVE-FORWARD is non-nil, move cursor one character forward after entering."
   (interactive "P")
   (setq evil-god-toggle--last-command last-command)
   (evil-god-toggle--add-fix-last)
-  (evil-god-toggle--maybe-restore-region 'evil-god-state)
+  (evil-god-toggle--switch-state-maybe-restore-region 'evil-god-state)
   (when move-forward
     (forward-char 1)))
 
@@ -236,7 +249,7 @@ If MOVE-FORWARD is non-nil, move cursor one character forward after entering."
   (interactive "P")
   (setq evil-god-toggle--last-command last-command)
   (evil-god-toggle--add-fix-last)
-  (evil-god-toggle--maybe-restore-region 'evil-god-once-state)
+  (evil-god-toggle--switch-state-maybe-restore-region-once 'evil-god-once-state)
   (when move-forward
     (forward-char 1)))
 
@@ -257,7 +270,7 @@ If called from the minibuffer, signal a user-error."
     ;; original behavior
     (evil-god-toggle--add-fix-last)
     (setq evil-god-toggle--last-command last-command)
-    (evil-god-toggle--maybe-restore-region 'evil-god-off-state)))
+    (evil-god-toggle--switch-state-maybe-restore-region 'evil-god-off-state)))
 
 
 ;;;###autoload
@@ -285,6 +298,34 @@ it it respects `evil-god-toggle-persist-visual'"
 	(evil-god-toggle-stop-execute-in-god-state 'visual))
     (evil-god-toggle-stop-execute-in-god-state alternate-target)))
 
+
+(defun evil-god-toggle-stop-god-state-maybe-visual-once (alternate-target)
+  "From God, toggle back into Evil, choosing appropriate state.
+Restore visual or going to state specified by `ALTERNATE-TARGET'.
+alternate-target can be `normal', `insert', or `visual'.
+If there's an active region AND either persist-visual flag is t,
+stash its bounds **and** direction, then call visual; else normal.
+This is the function that should be used for keybindings because
+it it respects `evil-god-toggle-persist-visual'"
+  (interactive)
+  ;; only if a region is selected
+  (let* ((persist-setting (if (eq evil-god-toggle-persist-visual-once 'follow)
+                              evil-god-toggle-persist-visual
+                              evil-god-toggle-persist-visual-once)))
+    
+    (if (and (use-region-p) (memq persist-setting '(always to-evil)))
+        (let* ((m       (mark))
+               (p       (point))
+               (beg     (min m p))
+               ;; Emacs's region-end is exclusive, so -1 to make it inclusive
+               (end     (1- (max m p)))
+               ;; mark before point?
+               (forward (<= m p)))
+          (setq evil-god-toggle--visual-beg     beg
+                evil-god-toggle--visual-end     end
+                evil-god-toggle--visual-forward forward)
+          (evil-god-toggle-stop-execute-in-god-state 'visual))
+      (evil-god-toggle-stop-execute-in-god-state alternate-target))))
 
 ;;;###autoload
 (defun evil-god-toggle-bail ()
@@ -346,10 +387,31 @@ so that exiting visual returns to normal instead of a god state."
         (setq last-command evil-god-toggle--last-command)
         (remove-hook 'pre-command-hook #'evil-god-toggle--fix-last-command t))
 
-(defun evil-god-toggle--maybe-restore-region (next-state-fn)
+(defun evil-god-toggle--switch-state-maybe-restore-region-once (next-state-fn)
+  "Switch to NEXT-STATE-FN and optionally restore region if in visual mode.
+Skip restoration if in visual block mode since block selections have
+different semantics.  Note that this is for going to god."
+  (let* ((persist-setting (if (eq evil-god-toggle-persist-visual-once 'follow)
+                              evil-god-toggle-persist-visual
+                            evil-god-toggle-persist-visual-once)))
+    (if (and (evil-visual-state-p)
+             (not (eq evil-visual-selection 'block))  ; Skip for visual block
+             (memq persist-setting '(always to-god)))
+	(let ((mrk (mark))
+              (pnt (point)))
+          (funcall next-state-fn)
+          (set-mark mrk)
+          (goto-char pnt))
+      (funcall next-state-fn))
+    )
+  )
+
+
+(defun evil-god-toggle--switch-state-maybe-restore-region (next-state-fn)
   "Switch to NEXT-STATE-FN and optionally restore region if in visual mode.
 Skip restoration if in visual block mode since block selections have
 different semantics."
+
   (if (and (evil-visual-state-p)
            (not (eq evil-visual-selection 'block))  ; Skip for visual block
            (memq evil-god-toggle-persist-visual '(always to-god)))
@@ -358,7 +420,8 @@ different semantics."
         (funcall next-state-fn)
         (set-mark mrk)
         (goto-char pnt))
-    (funcall next-state-fn)))
+    (funcall next-state-fn))
+  )
 
 (defun evil-god-toggle--remove-visual-hooks ()
   "Remove Evil's visual activate/deactivate hooks in current buffer."
@@ -436,7 +499,7 @@ Restores visual selection behavior by adding `evil-visual-activate-hook' to
          (let ((target-state evil-previous-state))
            (when (memq target-state '(god god-once god-off nil))
              (setq target-state 'normal))
-           (evil-god-toggle-stop-god-state-maybe-visual target-state)
+           (evil-god-toggle-stop-god-state-maybe-visual-once target-state)
            (evil-normalize-keymaps)))))))
 
 
