@@ -108,6 +108,30 @@ correct Evil state.
 
 **Respects `evil-god-toggle-persist-visual`**.
 
+
+### `evil-god-toggle-stop-god-state-maybe-visual-once`
+
+**Arguments:** `alternate-target` *(symbol: `'normal`, `'insert`, or
+`'visual`)*
+
+**Return Value:** `nil`
+
+**Description:** Exits God-once and chooses the destination Evil state.
+If a characterwise region is active and the effective persist setting
+(determined by `evil-god-toggle-persist-visual-once`) is `always` or `to-evil`,
+it stashes the region bounds/orientation and restores visual selection;
+otherwise it falls back to the specified `alternate-target`.
+When `evil-god-toggle-persist-visual-once` is set to `follow`, it uses
+the value of `evil-god-toggle-persist-visual` instead.
+
+**Intended Purpose:** The recommended exit entry point for god-once
+state keybindings, handling visual persistence and landing in the
+correct Evil state.
+
+**Respects `evil-god-toggle-persist-visual-once`**.
+
+
+
 ### `evil-god-toggle-god-toggle`
 
 **Arguments:** None (interactive)
@@ -255,7 +279,20 @@ customization group.
 
     *Note*: This only works with characterwise visual selection/active regions, not linewise selections or blockwise.
 
+### `evil-god-toggle-persist-visual-once`
 
+-   **Type:**
+    `(choice (const :tag "Always" always) (const :tag "To God" to-god) (const :tag "To Evil" to-evil) (const :tag "Follow" follow) (const :tag "Never" nil))`
+-   **Default:** `follow`
+-   **Description:** Controls whether and when an existing visual
+    selection or active region is preserved when toggling between Evil and God-once states.
+    -   `follow` -- use the value of `evil-god-toggle-persist-visual`.
+    -   `always` -- keep the region on both entry and exit.
+    -   `to-god` -- preserve only when entering God-once.
+    -   `to-evil` -- preserve only when returning to Evil.
+    -   `nil` -- never preserve the region.
+
+    *Note*: This only works with characterwise visual selection/active regions, not linewise selections or blockwise.
 
 ## Depends-On
 
@@ -368,7 +405,7 @@ character after entering the state. Convenience functions
 
 ## Version/License
 
-- **Version:** 1.1.0
+- **Version:** 1.2.0
 - **Author:** [Jordan Mandel](https://github.com/jam1015/)
 - **License:** GPL-3.0-or-later
 

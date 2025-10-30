@@ -3,7 +3,7 @@
 ;; Copyright (C) 2025 Jordan Mandel
 ;; Author: Jordan Mandel <jordan.mandel@live.com>
 ;; Created: 2025-04-22
-;; Version: 1.1.0
+;; Version: 1.2.0
 ;; Package-Requires: ((emacs "28.1") (evil "1.0.8") (god-mode "2.12.0"))
 ;; Keywords: convenience, emulation, evil, god-mode
 ;; Homepage: https://github.com/jam1015/evil-god-toggle
@@ -278,7 +278,7 @@ If called from the minibuffer, signal a user-error."
   "From God, toggle back into Evil, choosing appropriate state.
 Restore visual or going to state specified by `ALTERNATE-TARGET'.
 alternate-target can be `normal', `insert', or `visual'.
-If there's an active region AND either persist-visual flag is t,
+If there's an active region AND either persist-visual flag is active,
 stash its bounds **and** direction, then call visual; else normal.
 This is the function that should be used for keybindings because
 it it respects `evil-god-toggle-persist-visual'"
@@ -300,10 +300,10 @@ it it respects `evil-god-toggle-persist-visual'"
 
 
 (defun evil-god-toggle-stop-god-state-maybe-visual-once (alternate-target)
-  "From God, toggle back into Evil, choosing appropriate state.
+  "From God-once, toggle back into Evil, choosing appropriate state.
 Restore visual or going to state specified by `ALTERNATE-TARGET'.
 alternate-target can be `normal', `insert', or `visual'.
-If there's an active region AND either persist-visual flag is t,
+If there's an active region AND either persist-visual flag active,
 stash its bounds **and** direction, then call visual; else normal.
 This is the function that should be used for keybindings because
 it it respects `evil-god-toggle-persist-visual'"
@@ -459,7 +459,7 @@ Restores visual selection behavior by adding `evil-visual-activate-hook' to
         (deactivate-mark)
         (run-with-idle-timer
          0 nil
-         (lambda()
+         (lambda ()
         (evil-normal-state)))
 
         ))
