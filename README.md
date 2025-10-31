@@ -108,6 +108,25 @@ correct Evil state.
 
 **Respects `evil-god-toggle-persist-visual`**.
 
+
+### `evil-god-toggle-stop-god-state-maybe-visual-once`
+
+**Arguments:** `alternate-target` *(symbol: `'normal`, `'insert`, or
+`'visual`)*
+
+**Return Value:** `nil`
+
+**Description:** Similar to `evil-god-toggle-stop-god-state-maybe-visual` but
+specifically for exiting `god-once` state. Uses `evil-god-toggle-persist-visual-once`
+setting instead of `evil-god-toggle-persist-visual`. If `evil-god-toggle-persist-visual-once`
+is set to `'follow`, it inherits the behavior from `evil-god-toggle-persist-visual`.
+
+**Intended Purpose:** Internal function called automatically when exiting god-once state.
+Handles visual persistence according to the god-once specific settings.
+
+**Respects `evil-god-toggle-persist-visual-once`**.
+
+
 ### `evil-god-toggle-god-toggle`
 
 **Arguments:** None (interactive)
@@ -255,7 +274,28 @@ customization group.
 
     *Note*: This only works with characterwise visual selection/active regions, not linewise selections or blockwise.
 
+### `evil-god-toggle-persist-visual-once`
 
+-   **Type:**
+    `(choice (const :tag "Always" always) (const :tag "To God" to-god) (const :tag "To Evil" to-evil) (const :tag "Follow" follow) (const :tag "Never" nil))`
+-   **Default:** `follow`
+-   **Description:** Controls visual selection persistence specifically for `god-once` state transitions.
+    -   `always` -- keep the region on both entry and exit from god-once.
+    -   `to-god` -- preserve only when entering god-once.
+    -   `to-evil` -- preserve only when returning from god-once.
+    -   `follow` -- inherit the behavior from `evil-god-toggle-persist-visual`.
+    -   `nil` -- never preserve the region.
+
+### `evil-god-toggle-target-state-alist`
+
+-   **Type:** `(alist :key-type symbol :value-type symbol)`
+-   **Default:** `nil`
+-   **Description:** Alist mapping previous Evil states to target states when exiting `god-once`.
+    Each entry is `(PREVIOUS-STATE . TARGET-STATE)`. If a previous state is not found in this alist,
+    it will transition to that state directly. 
+    
+    Example: `'((insert . normal) (replace . normal))` would transition to normal state 
+    when exiting god-once from insert or replace states, but preserve other transitions.
 
 ## Depends-On
 
@@ -267,63 +307,113 @@ Depends on installation of [evil](https://github.com/emacs-evil/evil) and [god-m
 
 ### Example Use-package (with elpaca integration)
 
-The author of this plugin uses [Elpaca](https://github.com/progfolio/elpaca/) to manage packages although [Straight](https://github.com/radian-software/straight.el) might be easier to use.  There is also emacs native package management [package.el](https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/package.el).  See the documentation of those package managers / other sources for how to integrate with the [use-package](https://github.com/jwiegley/use-package) macro. [More documentation for use-package](https://www.gnu.org/software/emacs/manual/html_node/use-package/).
+The author of this plugin uses [Elpaca](https://github.com/progfolio/elpaca/) to manage packages although [Straight](https://github.com/radian-software/straight.el) might be easier to use. There is also emacs native package management [package.el](https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/package.el). See the documentation of those package managers / other sources for how to integrate with the [use-package](https://github.com/jwiegley/use-package) macro. [More documentation for use-package](https://www.gnu.org/software/emacs/manual/html_node/use-package/).
 
-Here is an example that works with Elpaca's use-package integration:
-
+Here is a comprehensive example that works with Elpaca's use-package integration:
 ```el
 (use-package evil-god-toggle
   :ensure (:host github
            :repo "jam1015/evil-god-toggle")
-  :after (evil god-mode )
+  :after (evil god-mode)
   :init
+  ;; Configure custom variables BEFORE loading (using setopt for proper initialization)
+  ;; Note: setopt requires Emacs 29+, use setq for earlier versions
+  
+  ;; Configure visual persistence for main god state
+  (setopt evil-god-toggle-persist-visual 'always)  ; or 'to-god, 'to-evil, nil
+  
+  ;; Configure god-once visual persistence
+  (setopt evil-god-toggle-persist-visual-once 'follow)  ; or 'always, 'to-god, 'to-evil, nil
+  
+  ;; Configure state transitions from god-once
+  ;; Example: always return to normal from insert/replace when exiting god-once
+  (setopt evil-god-toggle-target-state-alist
+          '((insert . normal)
+            (replace . normal)
+            (visual . normal)))
   
   :config
-  ;; 1. Enable the global minor mode (so its keymap + lighter are active)
+  ;; 1. Enable the global minor mode (required for keybindings)
   (evil-god-toggle-mode 1)
 
-  ;; 2. Enter persistent god mode from Normal/Insert/God-off states with C-;
+  ;; === PERSISTENT GOD MODE ===
+  
+  ;; 2. Enter persistent god mode from Normal/Insert/God-off with C-;
   (evil-define-key '(normal insert god-off)
     evil-god-toggle-mode-map
-    (kbd "C-;") (lambda ()
-                  (interactive)
-                  (evil-god-toggle-execute-in-god-state)))
+    (kbd "C-;") #'evil-god-toggle-execute-in-god-state)
 
-  ;; 3. Exit god mode to god-off state with C-; 
+  ;; 3. Alternative: Enter god mode and move forward one character (useful at end of line)
+  (evil-define-key 'normal
+    evil-god-toggle-mode-map
+    (kbd "C-M-;") #'evil-god-toggle-execute-in-god-state-forward)
+
+  ;; 4. Toggle between god and god-off with C-; when in god state
   (evil-define-key 'god
     evil-god-toggle-mode-map
-    (kbd "C-;") (lambda ()
-                  (interactive)
-                  (evil-god-toggle-execute-in-god-off-state)))
+    (kbd "C-;") #'evil-god-toggle-execute-in-god-off-state)
+  
+  ;; 5. Alternative toggle function that auto-detects state
+  (evil-define-key '(normal insert visual god god-off)
+    evil-god-toggle-mode-map
+    (kbd "C-\\") #'evil-god-toggle-god-toggle)
 
-  ;; 4. Escape from any god state returns to Normal
+  ;; === ONE-SHOT GOD MODE ===
+  
+  ;; 6. One-shot God mode: C-, for exactly one command
+  (evil-define-key '(normal insert visual)
+    evil-god-toggle-mode-map
+    (kbd "C-,") #'evil-god-toggle-once)
+
+  ;; 7. One-shot God mode with forward movement
+  (evil-define-key 'normal
+    evil-god-toggle-mode-map
+    (kbd "C-M-,") #'evil-god-toggle-once-forward)
+
+  ;; === EXIT BINDINGS ===
+  
+  ;; 8. Escape from any god state returns to Normal (respects visual persistence)
   (evil-define-key '(god god-off god-once)
     evil-god-toggle-mode-map
     [escape] (lambda ()
                (interactive)
                (evil-god-toggle-stop-god-state-maybe-visual 'normal)))
-
-  ;; 5. One-shot God mode: C-, in Normal for exactly one command
-  (evil-define-key 'normal
-    evil-god-toggle-mode-map
-    (kbd "C-,") (lambda ()
-                  (interactive)
-                  (evil-god-toggle-once)))
-
-  ;; 6. Visual persistence
-  (setq evil-god-toggle-persist-visual 'always))
   
-   ;; 7. Alternative: Enter god mode and move forward one character
-  ;;    Useful when cursor is at end of line in normal mode
-  (evil-define-key 'normal
+  ;; 9. Return to Insert from god states with 'i'
+  (evil-define-key '(god god-off)
     evil-god-toggle-mode-map
-    (kbd "C-M-;") #'evil-god-toggle-execute-in-god-state-forward)
-
-  ;; 8. Alternative: One-shot God mode with forward movement
-  (evil-define-key 'normal
-    evil-god-toggle-mode-map
-    (kbd "C-M-,") #'evil-god-toggle-once-forward)
+    "i" (lambda ()
+          (interactive)
+          (evil-god-toggle-stop-god-state-maybe-visual 'insert)))
   
+  ;; 10. Emergency bail: force exit to normal state
+  (evil-define-key '(god god-off god-once)
+    evil-god-toggle-mode-map
+    (kbd "C-g C-g") #'evil-god-toggle-bail)
+
+  ;; === DIRECT STATE TRANSITIONS (bypasses visual persistence) ===
+  
+  ;; 11. Direct transitions without visual persistence checking
+  (evil-define-key 'god
+    evil-god-toggle-mode-map
+    "I" (lambda ()
+          (interactive)
+          (evil-god-toggle-stop-execute-in-god-state 'insert))
+    "N" (lambda ()
+          (interactive)
+          (evil-god-toggle-stop-execute-in-god-state 'normal))
+    "V" (lambda ()
+          (interactive)
+          (evil-god-toggle-stop-execute-in-god-state 'visual))))
+
+;; === ALTERNATIVE: Using Customize Interface ===
+;; You can also set these through M-x customize-group RET evil-god-toggle RET
+;; or programmatically after the package loads:
+;;
+;; (with-eval-after-load 'evil-god-toggle
+;;   (setopt evil-god-toggle-persist-visual 'to-god)
+;;   (setopt evil-god-toggle-persist-visual-once 'always)
+;;   (setopt evil-god-toggle-target-state-alist '((insert . normal))))
 ```
 
 ## Other Notes
