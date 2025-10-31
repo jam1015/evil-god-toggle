@@ -389,7 +389,7 @@ so that exiting visual returns to normal instead of a god state."
 
 (defun evil-god-toggle--disable-god ()
   "Disable God mode."
-    (god-local-mode -1))
+  (god-local-mode -1))
 
 (defun evil-god-toggle--enable-god ()
   "Enable God mode."
