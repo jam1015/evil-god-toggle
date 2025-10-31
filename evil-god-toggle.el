@@ -80,6 +80,19 @@
   :group 'evil-god-toggle)
 
 
+;;;###autoload
+(defcustom evil-god-toggle-target-state-alist nil
+  "Alist mapping previous Evil states to target states when exiting god-once.
+Each entry is (PREVIOUS-STATE . TARGET-STATE).
+If a previous state is not found in this alist, it will transition
+to that state directly.
+
+Example: '((insert . normal) (replace . normal))
+This would transition to normal state when exiting god-once from
+insert or replace states."
+  :type '(alist :key-type symbol :value-type symbol)
+  :group 'evil-god-toggle)
+
 (defvar evil-god-toggle-mode-map (make-sparse-keymap)
   "Keymap for `evil-god-toggle-mode'.")
 
@@ -483,6 +496,13 @@ Restores visual selection behavior by adding `evil-visual-activate-hook' to
     ;; fallback: exactly like pressing v in normal
     (evil-visual-char)))
 
+(defun evil-god-toggle--determine-target-state (previous-state)
+  "Determine target state based on PREVIOUS-STATE and user configuration.
+If PREVIOUS-STATE is found in `evil-god-toggle-target-state-alist`,
+return its mapped value; otherwise return PREVIOUS-STATE itself."
+  (or (alist-get previous-state evil-god-toggle-target-state-alist)
+      previous-state))
+
 (defun evil-god-toggle--exit-once ()
   "Exit `god-once` state, return to previous Evil state, or `normal' if ambiguous."
   (if (not (eq evil-state 'god-once))
@@ -496,7 +516,7 @@ Restores visual selection behavior by adding `evil-visual-activate-hook' to
       (run-with-idle-timer
        0 nil
        (lambda ()
-         (let ((target-state evil-previous-state))
+         (let ((target-state (evil-god-toggle--determine-target-state evil-previous-state)))
            (when (memq target-state '(god god-once god-off nil))
              (setq target-state 'normal))
            (evil-god-toggle-stop-god-state-maybe-visual-once target-state)
