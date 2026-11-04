@@ -160,7 +160,7 @@ Creates `god-mode' states for Evil."
 (defun evil-god-toggle--once-start-hook-fun ()
   "Run before entering `evil-god-once-state'."
   (evil-god-toggle--remove-visual-hooks)
-  (evil-god-toggle--add-add-exit-once)
+  (evil-god-toggle--add-exit-once)
   (evil-god-toggle--enable-god)
   (evil-normalize-keymaps))
 
@@ -204,7 +204,7 @@ Creates `god-mode' states for Evil."
 (defun evil-god-toggle--off-once-start-hook-fun ()
   "Run before entering `evil-god-off-once-state'."
   (evil-god-toggle--remove-visual-hooks)
-  (evil-god-toggle--add-add-exit-off-once)
+  (evil-god-toggle--add-exit-off-once)
   (evil-god-toggle--disable-god))
 
 (defun evil-god-toggle--off-once-stop-hook-fun ()
@@ -410,11 +410,9 @@ it it respects `evil-god-toggle-persist-visual'"
   "Remove God mode transient hooks from all buffers that added them."
   (dolist (buf (buffer-list))
     (with-current-buffer buf
-        (remove-hook 'pre-command-hook #'evil-god-toggle--fix-last-command t)
-        (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t)
-        (remove-hook 'post-command-hook #'evil-god-toggle--add-exit-once t)
-        (remove-hook 'post-command-hook #'evil-god-toggle--exit-off-once t)
-        (remove-hook 'post-command-hook #'evil-god-toggle--add-exit-off-once t))))
+      (remove-hook 'pre-command-hook #'evil-god-toggle--fix-last-command t)
+      (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t)
+      (remove-hook 'post-command-hook #'evil-god-toggle--exit-off-once t))))
 
 (defun evil-god-toggle--add-fix-last ()
   "Add `evil-god-toggle--fix-last-command` to `pre-command-hook`."
@@ -422,20 +420,16 @@ it it respects `evil-god-toggle-persist-visual'"
   (add-hook 'pre-command-hook #'evil-god-toggle--fix-last-command nil t))
 
 (defun evil-god-toggle--add-exit-once ()
-  "Add `evil-god-toggle--exit-once` to `post-command-hook`."
+  "Add `evil-god-toggle--exit-once' to buffer-local `post-command-hook'.
+The exit function guards on `this-command' so the command that
+triggered entry into god-once does not immediately exit it."
   (add-hook 'post-command-hook #'evil-god-toggle--exit-once nil t))
 
-(defun evil-god-toggle--add-add-exit-once ()
-  "Add hook that adds `evil-god-toggle--exit-once` to `post-command-hook`."
-  (add-hook 'post-command-hook #'evil-god-toggle--add-exit-once nil t))
-
 (defun evil-god-toggle--add-exit-off-once ()
-  "Add `evil-god-toggle--exit-off-once` to `post-command-hook`."
+  "Add `evil-god-toggle--exit-off-once' to buffer-local `post-command-hook'.
+The exit function guards on `this-command' so the command that
+triggered entry into god-off-once does not immediately exit it."
   (add-hook 'post-command-hook #'evil-god-toggle--exit-off-once nil t))
-
-(defun evil-god-toggle--add-add-exit-off-once ()
-  "Add hook that adds `evil-god-toggle--exit-off-once` to `post-command-hook`."
-  (add-hook 'post-command-hook #'evil-god-toggle--add-exit-off-once nil t))
 
 (defun evil-god-toggle--check-and-update-previous-state-visual ()
   "Set the previous Evil state to `normal' if it was `god' or `god-once' upon entering `visual'.
