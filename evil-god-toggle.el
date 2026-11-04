@@ -111,6 +111,18 @@ buffer's saved value.")
 (defvar-local evil-god-toggle--visual-end nil
   "Buffer position of region end to restore when toggling back to Evil visual.")
 
+(defvar-local evil-god-toggle--exit-once-pending nil
+  "Skip-one flag for `evil-god-toggle--exit-once'.
+Set when god-once is entered so that the `post-command-hook' firing
+for the triggering command itself does not immediately exit god-once.
+Cleared on that first firing.  Decoupling the skip from `this-command'
+inspection means the mechanism works regardless of how the user bound
+`evil-god-toggle-once' (direct, lambda wrapper, dispatcher, etc.).")
+
+(defvar-local evil-god-toggle--exit-off-once-pending nil
+  "Skip-one flag for `evil-god-toggle--exit-off-once'.
+Same mechanism as `evil-god-toggle--exit-once-pending', for god-off-once.")
+
 ;;;###autoload
 (define-minor-mode evil-god-toggle-mode
   "Global mode for Evil/God toggling.
@@ -424,14 +436,18 @@ preservation.  Used for keybindings from God-once."
 
 (defun evil-god-toggle--add-exit-once ()
   "Add `evil-god-toggle--exit-once' to buffer-local `post-command-hook'.
-The exit function guards on `this-command' so the command that
-triggered entry into god-once does not immediately exit it."
+Also sets `evil-god-toggle--exit-once-pending' so the hook's first
+firing (for the command that triggered god-once entry) skips the exit
+and consumes the flag; the next command actually exits."
+  (setq evil-god-toggle--exit-once-pending t)
   (add-hook 'post-command-hook #'evil-god-toggle--exit-once nil t))
 
 (defun evil-god-toggle--add-exit-off-once ()
   "Add `evil-god-toggle--exit-off-once' to buffer-local `post-command-hook'.
-The exit function guards on `this-command' so the command that
-triggered entry into god-off-once does not immediately exit it."
+Also sets `evil-god-toggle--exit-off-once-pending' so the hook's first
+firing (for the command that triggered god-off-once entry) skips the
+exit and consumes the flag; the next command actually exits."
+  (setq evil-god-toggle--exit-off-once-pending t)
   (add-hook 'post-command-hook #'evil-god-toggle--exit-off-once nil t))
 
 (defun evil-god-toggle--check-and-update-previous-state-visual ()
@@ -550,41 +566,46 @@ return its mapped value; otherwise return PREVIOUS-STATE itself."
       previous-state))
 
 (defun evil-god-toggle--exit-once ()
-  "Exit `god-once` state, return to previous Evil state, or `normal' if ambiguous."
-  (if (not (eq evil-state 'god-once))
-      (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t)
-    ;; Only exit if we're not building a prefix command
-    (when (and (not (minibufferp))
-               (not (memq this-command '(evil-god-toggle-once evil-god-once-state)))
-               ;; This is the key: no prefix is being built
-               (not prefix-arg))
-      ;; Defer the state transition
-      (run-at-time
-       0 nil
-       (lambda ()
-         (let ((target-state (evil-god-toggle--determine-target-state evil-previous-state)))
-           (when (memq target-state '(god god-once god-off nil))
-             (setq target-state 'normal))
-           (evil-god-toggle-stop-god-state-maybe-visual-once target-state)
-           (evil-normalize-keymaps)))))))
-
-
+  "Exit `god-once', return to previous Evil state, or `normal' if ambiguous.
+Skips the first firing after entry via `evil-god-toggle--exit-once-pending',
+so the command that triggered entry does not immediately exit god-once.
+Also skips when building a prefix argument."
+  (cond
+   ((not (eq evil-state 'god-once))
+    (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t))
+   (evil-god-toggle--exit-once-pending
+    (setq evil-god-toggle--exit-once-pending nil))
+   ((and (not (minibufferp))
+         (not prefix-arg))
+    (run-at-time
+     0 nil
+     (lambda ()
+       (let ((target-state (evil-god-toggle--determine-target-state evil-previous-state)))
+         (when (memq target-state '(god god-once god-off nil))
+           (setq target-state 'normal))
+         (evil-god-toggle-stop-god-state-maybe-visual-once target-state)
+         (evil-normalize-keymaps)))))))
 
 (defun evil-god-toggle--exit-off-once ()
-  "Exit `god-off-once' state, return to previous Evil state, or `normal' if ambiguous."
-  (if (not (eq evil-state 'god-off-once))
-      (remove-hook 'post-command-hook #'evil-god-toggle--exit-off-once t)
-    (when (and (not (minibufferp))
-               (not (memq this-command '(evil-god-toggle-off-once evil-god-off-once-state)))
-               (not prefix-arg))
-      (run-at-time
-       0 nil
-       (lambda ()
-         (let ((target-state (evil-god-toggle--determine-target-state evil-previous-state)))
-           (when (memq target-state '(god god-once god-off god-off-once nil))
-             (setq target-state 'normal))
-           (evil-god-toggle-stop-execute-in-god-state target-state)
-           (evil-normalize-keymaps)))))))
+  "Exit `god-off-once', return to previous Evil state, or `normal' if ambiguous.
+Skips the first firing after entry via
+`evil-god-toggle--exit-off-once-pending'.  Also skips when building a
+prefix argument."
+  (cond
+   ((not (eq evil-state 'god-off-once))
+    (remove-hook 'post-command-hook #'evil-god-toggle--exit-off-once t))
+   (evil-god-toggle--exit-off-once-pending
+    (setq evil-god-toggle--exit-off-once-pending nil))
+   ((and (not (minibufferp))
+         (not prefix-arg))
+    (run-at-time
+     0 nil
+     (lambda ()
+       (let ((target-state (evil-god-toggle--determine-target-state evil-previous-state)))
+         (when (memq target-state '(god god-once god-off god-off-once nil))
+           (setq target-state 'normal))
+         (evil-god-toggle-stop-execute-in-god-state target-state)
+         (evil-normalize-keymaps)))))))
 
 
 (provide 'evil-god-toggle)

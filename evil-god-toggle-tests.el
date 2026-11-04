@@ -167,6 +167,47 @@ to enter charwise visual synchronously."
     (should-not (region-active-p))
     (should-not (eq evil-state 'visual))))
 
+;;;; Once lifecycle (pending-flag skip)
+
+(ert-deftest evil-god-toggle-test-exit-once-skips-triggering-command ()
+  "`--exit-once' running under the triggering command's post-command-hook
+must not exit immediately.  Regression test for a1b2c3d: a prior
+refactor made the skip depend on `this-command' matching
+`evil-god-toggle-once', which broke bindings that wrap the command
+in a lambda (where `this-command' is the lambda, not the command)."
+  (evil-god-toggle-tests--with-temp-buffer
+    ;; Simulate what entry does: schedule the exit hook with pending=t.
+    (evil-god-once-state)
+    ;; Entry hook already ran via evil-define-state; verify pending=t.
+    (should evil-god-toggle--exit-once-pending)
+    (should (eq evil-state 'god-once))
+    ;; First firing (the "triggering command" post-command) — simulate
+    ;; this-command being something other than evil-god-toggle-once.
+    (let ((this-command (lambda () (interactive))))
+      (evil-god-toggle--exit-once))
+    ;; Still in god-once, pending flag consumed.
+    (should (eq evil-state 'god-once))
+    (should-not evil-god-toggle--exit-once-pending)))
+
+(ert-deftest evil-god-toggle-test-exit-once-skips-prefix-arg ()
+  "`--exit-once' does not fire while the user is building a prefix arg."
+  (evil-god-toggle-tests--with-temp-buffer
+    (evil-god-once-state)
+    (setq evil-god-toggle--exit-once-pending nil) ; consume entry's skip
+    (let ((prefix-arg '(4)))
+      (evil-god-toggle--exit-once))
+    (should (eq evil-state 'god-once))))
+
+(ert-deftest evil-god-toggle-test-exit-once-removes-hook-outside-god-once ()
+  "`--exit-once' self-removes from `post-command-hook' when state leaves
+god-once by any other path."
+  (evil-god-toggle-tests--with-temp-buffer
+    (evil-god-once-state)
+    (add-hook 'post-command-hook #'evil-god-toggle--exit-once nil t)
+    (evil-normal-state)
+    (evil-god-toggle--exit-once)
+    (should-not (memq #'evil-god-toggle--exit-once post-command-hook))))
+
 ;;;; Buffer-locality
 
 (ert-deftest evil-god-toggle-test-last-command-buffer-local ()
