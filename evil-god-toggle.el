@@ -532,38 +532,38 @@ Restores visual selection behavior by adding `evil-visual-activate-hook' to
   (evil-insert-state))
 
 (defun evil-god-toggle--transition-to-visual ()
-  "Enter Evil visual (charwise), restoring any stashed region & orientation."
-(if (bound-and-true-p rectangle-mark-mode)
-      (progn
-        (setq evil-god-toggle--visual-beg nil
-         evil-god-toggle--visual-end nil
-         evil-god-toggle--visual-forward nil)
-        (deactivate-mark)
-        (run-with-idle-timer
-         0 nil
-         (lambda ()
-        (evil-normal-state)))
-
-        ))
-  (when (region-active-p)
-    (deactivate-mark))
-  (if (and evil-god-toggle--visual-beg
-           evil-god-toggle--visual-end)
-      (progn
-        (evil-visual-state)
-        (evil-visual-select
-         evil-god-toggle--visual-beg
-         evil-god-toggle--visual-end
-         'char)
-        ;; swap point and mark if original was backward
-        (unless evil-god-toggle--visual-forward
-          (evil-exchange-point-and-mark))
-        ;; clear the stash
-        (setq evil-god-toggle--visual-beg nil
-              evil-god-toggle--visual-end nil
-              evil-god-toggle--visual-forward nil))
-    ;; fallback: exactly like pressing v in normal
-    (evil-visual-char)))
+  "Enter Evil visual (charwise), restoring any stashed region & orientation.
+In `rectangle-mark-mode', skip visual restoration entirely: clear the
+stash, deactivate the mark, and schedule a transition to normal state.
+Rectangle selections have different semantics from Evil's charwise
+visual, so trying to restore one as the other produces wrong results."
+  (cond
+   ((bound-and-true-p rectangle-mark-mode)
+    (setq evil-god-toggle--visual-beg nil
+          evil-god-toggle--visual-end nil
+          evil-god-toggle--visual-forward nil)
+    (deactivate-mark)
+    (run-at-time 0 nil #'evil-normal-state))
+   (t
+    (when (region-active-p)
+      (deactivate-mark))
+    (if (and evil-god-toggle--visual-beg
+             evil-god-toggle--visual-end)
+        (progn
+          (evil-visual-state)
+          (evil-visual-select
+           evil-god-toggle--visual-beg
+           evil-god-toggle--visual-end
+           'char)
+          ;; swap point and mark if original was backward
+          (unless evil-god-toggle--visual-forward
+            (evil-exchange-point-and-mark))
+          ;; clear the stash
+          (setq evil-god-toggle--visual-beg nil
+                evil-god-toggle--visual-end nil
+                evil-god-toggle--visual-forward nil))
+      ;; fallback: exactly like pressing v in normal
+      (evil-visual-char)))))
 
 (defun evil-god-toggle--determine-target-state (previous-state)
   "Determine target state based on PREVIOUS-STATE and user configuration.
