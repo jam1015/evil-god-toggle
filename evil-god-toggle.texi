@@ -40,6 +40,7 @@ editing without leaving Evil's state machine.
 * Installation::
 * End-of-line cursor note::
 * To do::
+* Running the tests::
 * Related::
 * Regenerating the manual::
 * License::
@@ -331,11 +332,29 @@ position without a jarring jump.
 
 @itemize
 @item
-Tests.
-@item
 Linewise and blockwise visual preservation. Attempted once;
 complicated.
 @end itemize
+
+@node Running the tests
+@chapter Running the tests
+
+@example
+make test
+@end example
+
+Needs @samp{evil} and @samp{god-mode} on @samp{load-path}. The Makefile defaults to
+Elpaca's build directories under @samp{~/.emacs.default/elpaca/builds/};
+override via @samp{EVIL_DIR} and @samp{GOD_MODE_DIR} for other setups:
+
+@example
+make test EVIL_DIR=/path/to/evil GOD_MODE_DIR=/path/to/god-mode
+@end example
+
+Coverage is modest: pure helpers@comma{} state-entry end points@comma{} interactive
+guards@comma{} and a regression test for the rectangle-mark-mode branch of
+@samp{--transition-to-visual}. The timer-driven once-exit paths fire via
+@samp{run-at-time} and are better verified interactively.
 
 @node Related
 @chapter Related

@@ -218,9 +218,27 @@ position without a jarring jump.
 
 * To do
 
-- Tests.
 - Linewise and blockwise visual preservation. Attempted once;
   complicated.
+
+* Running the tests
+
+#+begin_src sh
+make test
+#+end_src
+
+Needs =evil= and =god-mode= on =load-path=. The Makefile defaults to
+Elpaca's build directories under =~/.emacs.default/elpaca/builds/=;
+override via =EVIL_DIR= and =GOD_MODE_DIR= for other setups:
+
+#+begin_src sh
+make test EVIL_DIR=/path/to/evil GOD_MODE_DIR=/path/to/god-mode
+#+end_src
+
+Coverage is modest: pure helpers, state-entry end points, interactive
+guards, and a regression test for the rectangle-mark-mode branch of
+=--transition-to-visual=. The timer-driven once-exit paths fire via
+=run-at-time= and are better verified interactively.
 
 * Related
 
