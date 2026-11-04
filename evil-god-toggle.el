@@ -6,7 +6,7 @@
 ;; Version: 1.3.0
 ;; Package-Requires: ((emacs "28.1") (evil "1.0.8") (god-mode "2.12.0"))
 ;; Keywords: convenience, emulation, evil, god-mode
-;; Homepage: https://github.com/jam1015/evil-god-toggle
+;; URL: https://github.com/jam1015/evil-god-toggle
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -98,8 +98,11 @@ insert or replace states."
   "Keymap for `evil-god-toggle-mode'.")
 
 
-(defvar evil-god-toggle--last-command nil
-  "Command executed just before entering god state.")
+(defvar-local evil-god-toggle--last-command nil
+  "Command executed just before entering god state.
+Buffer-local so that entering god-once in one buffer, switching to
+another, and entering god-once there does not clobber the first
+buffer's saved value.")
 
 (defvar-local evil-god-toggle--visual-forward nil
   "Non-nil if the saved region was selected forward (mark ≤ point).")
@@ -283,8 +286,8 @@ Does not respect `evil-god-toggle-persist-visual'
 
 (defun evil-god-toggle--execute-in-god-once-state (&optional move-forward)
   "Go into God-once state, preserving visual selection if configured.
-If MOVE-FORWARD is non-nil, move cursor one character forward after entering."
-  (interactive "P")
+If MOVE-FORWARD is non-nil, move cursor one character forward after entering.
+Internal helper; use `evil-god-toggle-once' as the user-facing command."
   (setq evil-god-toggle--last-command last-command)
   (evil-god-toggle--add-fix-last)
   (evil-god-toggle--switch-state-maybe-restore-region 'evil-god-once-state t)
@@ -556,7 +559,7 @@ return its mapped value; otherwise return PREVIOUS-STATE itself."
                ;; This is the key: no prefix is being built
                (not prefix-arg))
       ;; Defer the state transition
-      (run-with-idle-timer
+      (run-at-time
        0 nil
        (lambda ()
          (let ((target-state (evil-god-toggle--determine-target-state evil-previous-state)))
@@ -574,7 +577,7 @@ return its mapped value; otherwise return PREVIOUS-STATE itself."
     (when (and (not (minibufferp))
                (not (memq this-command '(evil-god-toggle-off-once evil-god-off-once-state)))
                (not prefix-arg))
-      (run-with-idle-timer
+      (run-at-time
        0 nil
        (lambda ()
          (let ((target-state (evil-god-toggle--determine-target-state evil-previous-state)))
