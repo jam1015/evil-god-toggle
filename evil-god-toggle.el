@@ -3,7 +3,7 @@
 ;; Copyright (C) 2025 Jordan Mandel
 ;; Author: Jordan Mandel <jordan.mandel@live.com>
 ;; Created: 2025-04-22
-;; Version: 1.3.0
+;; Version: 1.4.0
 ;; Package-Requires: ((emacs "28.1") (evil "1.0.8") (god-mode "2.12.0"))
 ;; Keywords: convenience, emulation, evil, god-mode
 ;; URL: https://github.com/jam1015/evil-god-toggle
