@@ -1,0 +1,263 @@
+#+TITLE: evil-god-toggle
+#+AUTHOR: Jordan Mandel
+#+LANGUAGE: en
+#+EXPORT_FILE_NAME: evil-god-toggle.texi
+#+TEXINFO_DIR_CATEGORY: Emacs
+#+TEXINFO_DIR_TITLE: evil-god-toggle: (evil-god-toggle).
+#+TEXINFO_DIR_DESC: Toggle Evil and God modes as Evil states.
+#+OPTIONS: ':t toc:t
+
+#+HTML: <p>
+#+HTML:   <a href="https://www.gnu.org/licenses/gpl-3.0.en.html#license-text"><img src="https://img.shields.io/badge/license-GPL--3.0-blue" alt="GPLv3"/></a>
+#+HTML:   <a href="https://melpa.org/#/evil-god-toggle"><img src="https://melpa.org/packages/evil-god-toggle-badge.svg" alt="MELPA"/></a>
+#+HTML:   <a href="https://stable.melpa.org/#/evil-god-toggle"><img src="https://stable.melpa.org/packages/evil-god-toggle-badge.svg" alt="MELPA Stable"/></a>
+#+HTML: </p>
+
+An Emacs package that makes [[https://github.com/emacsorphanage/god-mode][god-mode]] a state of
+[[https://github.com/emacs-evil/evil][Evil]], alongside Normal, Insert, and
+the rest. Switch between modal Vim-style editing and chord-free Emacs
+editing without leaving Evil's state machine.
+
+* Motivation
+
+As a Neovim user coming to Emacs, key chords are hard to get used to,
+Vim bindings are habitual, and even =evil= plus
+[[https://github.com/emacs-evil/evil-collection][evil-collection]] does not
+cover every Emacs corner.
+
+=god-mode= holds Control down for you, so =C-x C-f= becomes =x f=. That
+makes it feel like Vim's Normal mode: keys bound to commands, with
+text insertion as the other mode.
+
+The =god-mode= README
+[[https://github.com/emacsorphanage/god-mode?tab=readme-ov-file#usage-with-evil][lists ways]]
+of using it alongside Evil, but none give a satisfactory way to run
+god-mode as a persistent Evil state.
+[[https://github.com/gridaphobe/evil-god-state][evil-god-state]]
+provides a one-command god state. This package adds a persistent god
+state plus one-command variants in both directions.
+
+* States
+
+| State          | Mode-line tag    | Purpose                                                    |
+|----------------+------------------+------------------------------------------------------------|
+| =god=          | =<G>=            | Persistent god-mode as an Evil state.                      |
+| =god-off=      | =<G (off)>=      | No keybindings; like Evil's Emacs state. Easy to toggle.   |
+| =god-once=     | =<G (once)>=     | god for one command, then back to previous Evil state.     |
+| =god-off-once= | =<G (off once)>= | god-off for one command, then back to previous Evil state. |
+
+* Minor mode
+
+=evil-god-toggle-mode=. A global minor mode that owns the keymap
+(=evil-god-toggle-mode-map=) users bind the package's commands into.
+Also installs a hook on =evil-visual-state-entry-hook= so that
+entering visual from a god state resets the previous state to normal;
+otherwise exiting visual would return to a god state unexpectedly.
+
+* Commands
+
+** Entering god
+
+- =evil-god-toggle-execute-in-god-state= (optional prefix arg). Enter
+  persistent god state from any Evil state. Preserves visual region
+  per =evil-god-toggle-persist-visual=. Prefix arg moves cursor one
+  character forward, useful at end-of-line (god allows the cursor
+  past the last char, Evil normal does not).
+- =evil-god-toggle-execute-in-god-state-forward=. Same as above, with
+  the move-forward behavior baked in.
+
+** Leaving god
+
+- =evil-god-toggle-stop-god-state-maybe-visual= (takes
+  ALTERNATE-TARGET: =normal=, =insert=, or =visual=). Exits god and
+  picks the destination Evil state. If a charwise region is active
+  and =evil-god-toggle-persist-visual= is =always= or =to-evil=,
+  stashes the region and restores visual; otherwise falls back to
+  ALTERNATE-TARGET. Recommended entry point for keybindings.
+- =evil-god-toggle-stop-god-state-maybe-visual-once=. Same for
+  god-once; consults =evil-god-toggle-persist-visual-once= (falling
+  back to =-persist-visual= when set to =follow=).
+- =evil-god-toggle-stop-execute-in-god-state= (takes TARGET). Bare
+  transition without visual-persistence logic. Used by the =-maybe-=
+  variants; prefer those for keybindings.
+- =evil-god-toggle-bail=. Immediately abort any god state, strip
+  transient hooks, land in Evil normal. Escape hatch.
+
+** Toggling
+
+- =evil-god-toggle-god-toggle=. If in god, call
+  =-execute-in-god-off-state=; otherwise call =-execute-in-god-state=.
+  One-key flip-flop.
+- =evil-god-toggle-execute-in-god-off-state= (optional prefix arg).
+  Enter god-off. Same visual-region handling and prefix-arg
+  move-forward as =-execute-in-god-state=.
+
+** One-command variants
+
+- =evil-god-toggle-once= (optional prefix arg). Enter god-once for
+  exactly one non-prefix command, then return to the previous state.
+  Signals an error if already in god/god-once or in the minibuffer.
+- =evil-god-toggle-once-forward=. With move-forward.
+- =evil-god-toggle-off-once= (optional prefix arg). Enter god-off-once
+  for one command. Signals an error if already in god-off/god-off-once.
+- =evil-god-toggle-off-once-forward=. With move-forward.
+
+* Customization
+
+All options live in the =evil-god-toggle= group.
+
+** =evil-god-toggle-persist-visual=
+
+Default =always=. Controls whether an active charwise region is
+preserved when toggling between Evil and god.
+
+- =always=: keep the region on both entry and exit.
+- =to-god=: preserve only when entering god.
+- =to-evil=: preserve only when returning to Evil.
+- =nil=: never preserve.
+
+Only applies to charwise selections; linewise and blockwise are not
+preserved.
+
+** =evil-god-toggle-persist-visual-once=
+
+Default =follow=. Same semantics as above, but for god-once
+transitions. =follow= defers to =evil-god-toggle-persist-visual=.
+
+** =evil-god-toggle-target-state-alist=
+
+Default =nil=. Alist mapping previous Evil state to the state that
+exiting god-once should land in. Unmapped previous states carry
+through directly.
+
+#+begin_src elisp
+(setopt evil-god-toggle-target-state-alist
+        '((insert . normal) (replace . normal)))
+#+end_src
+
+* Dependencies
+
+[[https://github.com/emacs-evil/evil][evil]] and
+[[https://github.com/emacsorphanage/god-mode][god-mode]]. Nothing else
+at runtime. =makeinfo= is only needed if you regenerate the manual
+from =README.org=.
+
+* Installation
+
+Full example with Elpaca and use-package:
+
+#+begin_src elisp
+(use-package evil-god-toggle
+  :ensure (:host github :repo "jam1015/evil-god-toggle")
+  :after (evil god-mode)
+  :init
+  (setopt evil-god-toggle-persist-visual 'always)
+  (setopt evil-god-toggle-persist-visual-once 'follow)
+  (setopt evil-god-toggle-target-state-alist
+          '((insert . normal) (replace . normal) (visual . normal)))
+  :config
+  (evil-god-toggle-mode 1)
+
+  ;; Enter persistent god from normal/insert/god-off
+  (evil-define-key '(normal insert god-off) evil-god-toggle-mode-map
+    (kbd "C-;") #'evil-god-toggle-execute-in-god-state)
+
+  ;; Enter god and move forward one char (useful at end-of-line)
+  (evil-define-key 'normal evil-god-toggle-mode-map
+    (kbd "C-M-;") #'evil-god-toggle-execute-in-god-state-forward)
+
+  ;; Toggle to god-off while in god
+  (evil-define-key 'god evil-god-toggle-mode-map
+    (kbd "C-;") #'evil-god-toggle-execute-in-god-off-state)
+
+  ;; Auto-detect flip between god and god-off
+  (evil-define-key '(normal insert visual god god-off)
+    evil-god-toggle-mode-map
+    (kbd "C-\\") #'evil-god-toggle-god-toggle)
+
+  ;; One-shot god
+  (evil-define-key '(normal insert visual) evil-god-toggle-mode-map
+    (kbd "C-,") #'evil-god-toggle-once)
+  (evil-define-key 'normal evil-god-toggle-mode-map
+    (kbd "C-M-,") #'evil-god-toggle-once-forward)
+
+  ;; Escape returns to normal, honoring visual persistence
+  (evil-define-key '(god god-off god-once) evil-god-toggle-mode-map
+    [escape] (lambda () (interactive)
+               (evil-god-toggle-stop-god-state-maybe-visual 'normal)))
+
+  ;; i from god lands in insert
+  (evil-define-key '(god god-off) evil-god-toggle-mode-map
+    "i" (lambda () (interactive)
+          (evil-god-toggle-stop-god-state-maybe-visual 'insert)))
+
+  ;; Emergency bail
+  (evil-define-key '(god god-off god-once) evil-god-toggle-mode-map
+    (kbd "C-g C-g") #'evil-god-toggle-bail)
+
+  ;; Direct transitions, bypass visual persistence
+  (evil-define-key 'god evil-god-toggle-mode-map
+    "I" (lambda () (interactive)
+          (evil-god-toggle-stop-execute-in-god-state 'insert))
+    "N" (lambda () (interactive)
+          (evil-god-toggle-stop-execute-in-god-state 'normal))
+    "V" (lambda () (interactive)
+          (evil-god-toggle-stop-execute-in-god-state 'visual))))
+#+end_src
+
+Straight and package.el work too; see their respective docs for
+use-package integration.
+
+* End-of-line cursor note
+
+In Evil normal, the cursor sits ON the last character of a line. In
+Emacs and god, it can sit AFTER the last character. The =-forward=
+variants (and the prefix-arg form of their non-forward siblings) move
+the cursor one character after entering, so you can access that extra
+position without a jarring jump.
+
+* To do
+
+- Linewise and blockwise visual preservation. Attempted once;
+  complicated.
+
+* Running the tests
+
+#+begin_src sh
+make test
+#+end_src
+
+Needs =evil= and =god-mode= on =load-path=. The Makefile defaults to
+Elpaca's build directories under =~/.emacs.default/elpaca/builds/=;
+override via =EVIL_DIR= and =GOD_MODE_DIR= for other setups:
+
+#+begin_src sh
+make test EVIL_DIR=/path/to/evil GOD_MODE_DIR=/path/to/god-mode
+#+end_src
+
+Coverage is modest: pure helpers, state-entry end points, interactive
+guards, and a regression test for the rectangle-mark-mode branch of
+=--transition-to-visual=. The timer-driven once-exit paths fire via
+=run-at-time= and are better verified interactively.
+
+* Related
+
+- [[https://github.com/emacs-evil/evil-collection][evil-collection]]
+- [[https://github.com/emacsorphanage/god-mode][god-mode]]
+- [[https://github.com/gridaphobe/evil-god-state][evil-god-state]]
+- [[https://github.com/jam1015/cursor-contraster][cursor-contraster]]
+  (companion for cursor colors per Evil state)
+
+* Regenerating the manual
+
+=evil-god-toggle.texi= is generated from =README.org= via =ox-texinfo=.
+If you change the README, regenerate and commit it:
+
+#+begin_src sh
+make doc        # produces evil-god-toggle.texi
+make info       # optional: locally preview the .info
+#+end_src
+
+* License
+
+GPL-3.0-or-later. See =COPYING=.

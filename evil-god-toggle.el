@@ -3,10 +3,10 @@
 ;; Copyright (C) 2025 Jordan Mandel
 ;; Author: Jordan Mandel <jordan.mandel@live.com>
 ;; Created: 2025-04-22
-;; Version: 1.3.0
+;; Version: 1.4.0
 ;; Package-Requires: ((emacs "28.1") (evil "1.0.8") (god-mode "2.12.0"))
 ;; Keywords: convenience, emulation, evil, god-mode
-;; Homepage: https://github.com/jam1015/evil-god-toggle
+;; URL: https://github.com/jam1015/evil-god-toggle
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -98,8 +98,11 @@ insert or replace states."
   "Keymap for `evil-god-toggle-mode'.")
 
 
-(defvar evil-god-toggle--last-command nil
-  "Command executed just before entering god state.")
+(defvar-local evil-god-toggle--last-command nil
+  "Command executed just before entering god state.
+Buffer-local so that entering god-once in one buffer, switching to
+another, and entering god-once there does not clobber the first
+buffer's saved value.")
 
 (defvar-local evil-god-toggle--visual-forward nil
   "Non-nil if the saved region was selected forward (mark ≤ point).")
@@ -107,6 +110,18 @@ insert or replace states."
   "Buffer position of region start to restore when toggling back to Evil visual.")
 (defvar-local evil-god-toggle--visual-end nil
   "Buffer position of region end to restore when toggling back to Evil visual.")
+
+(defvar-local evil-god-toggle--exit-once-pending nil
+  "Skip-one flag for `evil-god-toggle--exit-once'.
+Set when god-once is entered so that the `post-command-hook' firing
+for the triggering command itself does not immediately exit god-once.
+Cleared on that first firing.  Decoupling the skip from `this-command'
+inspection means the mechanism works regardless of how the user bound
+`evil-god-toggle-once' (direct, lambda wrapper, dispatcher, etc.).")
+
+(defvar-local evil-god-toggle--exit-off-once-pending nil
+  "Skip-one flag for `evil-god-toggle--exit-off-once'.
+Same mechanism as `evil-god-toggle--exit-once-pending', for god-off-once.")
 
 ;;;###autoload
 (define-minor-mode evil-god-toggle-mode
@@ -160,7 +175,7 @@ Creates `god-mode' states for Evil."
 (defun evil-god-toggle--once-start-hook-fun ()
   "Run before entering `evil-god-once-state'."
   (evil-god-toggle--remove-visual-hooks)
-  (evil-god-toggle--add-add-exit-once)
+  (evil-god-toggle--add-exit-once)
   (evil-god-toggle--enable-god)
   (evil-normalize-keymaps))
 
@@ -204,7 +219,7 @@ Creates `god-mode' states for Evil."
 (defun evil-god-toggle--off-once-start-hook-fun ()
   "Run before entering `evil-god-off-once-state'."
   (evil-god-toggle--remove-visual-hooks)
-  (evil-god-toggle--add-add-exit-off-once)
+  (evil-god-toggle--add-exit-off-once)
   (evil-god-toggle--disable-god))
 
 (defun evil-god-toggle--off-once-stop-hook-fun ()
@@ -283,11 +298,11 @@ Does not respect `evil-god-toggle-persist-visual'
 
 (defun evil-god-toggle--execute-in-god-once-state (&optional move-forward)
   "Go into God-once state, preserving visual selection if configured.
-If MOVE-FORWARD is non-nil, move cursor one character forward after entering."
-  (interactive "P")
+If MOVE-FORWARD is non-nil, move cursor one character forward after entering.
+Internal helper; use `evil-god-toggle-once' as the user-facing command."
   (setq evil-god-toggle--last-command last-command)
   (evil-god-toggle--add-fix-last)
-  (evil-god-toggle--switch-state-maybe-restore-region-once 'evil-god-once-state)
+  (evil-god-toggle--switch-state-maybe-restore-region 'evil-god-once-state t)
   (when move-forward
     (forward-char 1)))
 
@@ -345,46 +360,27 @@ If MOVE-FORWARD is non-nil, move cursor one character forward after entering."
   (evil-god-toggle-off-once t))
 
 ;;;###autoload
-(defun evil-god-toggle-stop-god-state-maybe-visual (alternate-target)
+(defun evil-god-toggle--effective-persist-visual (once)
+  "Return the effective persist-visual setting for this transition.
+When ONCE is non-nil, consult `evil-god-toggle-persist-visual-once';
+if that is `follow', fall back to `evil-god-toggle-persist-visual'.
+When ONCE is nil, always use `evil-god-toggle-persist-visual'."
+  (if once
+      (if (eq evil-god-toggle-persist-visual-once 'follow)
+          evil-god-toggle-persist-visual
+        evil-god-toggle-persist-visual-once)
+    evil-god-toggle-persist-visual))
+
+(defun evil-god-toggle--stop-god-state-maybe-visual (alternate-target once)
   "From God, toggle back into Evil, choosing appropriate state.
-Restore visual or going to state specified by `ALTERNATE-TARGET'.
-alternate-target can be `normal', `insert', or `visual'.
-If there's an active region AND either persist-visual flag is active,
-stash its bounds **and** direction, then call visual; else normal.
-This is the function that should be used for keybindings because
-it it respects `evil-god-toggle-persist-visual'"
-  (interactive)
-  ;; only if a region is selected
-  (if (and (use-region-p)  (memq evil-god-toggle-persist-visual '(always to-evil)))
-      (let* ((m       (mark))
-             (p       (point))
-             (beg     (min m p))
-             ;; Emacs's region-end is exclusive, so -1 to make it inclusive
-             (end     (1- (max m p)))
-             ;; mark before point?
-             (forward (<= m p)))
-        (setq evil-god-toggle--visual-beg     beg
-              evil-god-toggle--visual-end     end
-              evil-god-toggle--visual-forward forward)
-	(evil-god-toggle-stop-execute-in-god-state 'visual))
-    (evil-god-toggle-stop-execute-in-god-state alternate-target)))
-
-
-(defun evil-god-toggle-stop-god-state-maybe-visual-once (alternate-target)
-  "From God-once, toggle back into Evil, choosing appropriate state.
-Restore visual or going to state specified by `ALTERNATE-TARGET'.
-alternate-target can be `normal', `insert', or `visual'.
-If there's an active region AND either persist-visual flag active,
-stash its bounds **and** direction, then call visual; else normal.
-This is the function that should be used for keybindings because
-it it respects `evil-god-toggle-persist-visual'"
-  (interactive)
-  ;; only if a region is selected
-  (let* ((persist-setting (if (eq evil-god-toggle-persist-visual-once 'follow)
-                              evil-god-toggle-persist-visual
-                              evil-god-toggle-persist-visual-once)))
-    
-    (if (and (use-region-p) (memq persist-setting '(always to-evil)))
+Restore visual or go to state specified by ALTERNATE-TARGET.
+ALTERNATE-TARGET can be `normal', `insert', or `visual'.
+If there is an active region AND the effective persist-visual setting
+is `always' or `to-evil', stash its bounds and direction, then go to
+visual; else go to ALTERNATE-TARGET.  ONCE selects which persist-visual
+variable to consult; see `--effective-persist-visual'."
+  (let ((persist (evil-god-toggle--effective-persist-visual once)))
+    (if (and (use-region-p) (memq persist '(always to-evil)))
         (let* ((m       (mark))
                (p       (point))
                (beg     (min m p))
@@ -399,6 +395,25 @@ it it respects `evil-god-toggle-persist-visual'"
       (evil-god-toggle-stop-execute-in-god-state alternate-target))))
 
 ;;;###autoload
+(defun evil-god-toggle-stop-god-state-maybe-visual (alternate-target)
+  "From God, toggle back into Evil, choosing appropriate state.
+Wraps `--stop-god-state-maybe-visual' with ONCE nil, so
+`evil-god-toggle-persist-visual' alone governs visual preservation.
+This is the function that should be used for keybindings from
+persistent God state."
+  (interactive)
+  (evil-god-toggle--stop-god-state-maybe-visual alternate-target nil))
+
+(defun evil-god-toggle-stop-god-state-maybe-visual-once (alternate-target)
+  "From God-once, toggle back into Evil, choosing appropriate state.
+Wraps `--stop-god-state-maybe-visual' with ONCE t, so
+`evil-god-toggle-persist-visual-once' (falling back to
+`evil-god-toggle-persist-visual' when set to `follow') governs visual
+preservation.  Used for keybindings from God-once."
+  (interactive)
+  (evil-god-toggle--stop-god-state-maybe-visual alternate-target t))
+
+;;;###autoload
 (defun evil-god-toggle-bail ()
   "Abort any God state immediately and return to Evil normal."
   (interactive)
@@ -410,11 +425,9 @@ it it respects `evil-god-toggle-persist-visual'"
   "Remove God mode transient hooks from all buffers that added them."
   (dolist (buf (buffer-list))
     (with-current-buffer buf
-        (remove-hook 'pre-command-hook #'evil-god-toggle--fix-last-command t)
-        (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t)
-        (remove-hook 'post-command-hook #'evil-god-toggle--add-exit-once t)
-        (remove-hook 'post-command-hook #'evil-god-toggle--exit-off-once t)
-        (remove-hook 'post-command-hook #'evil-god-toggle--add-exit-off-once t))))
+      (remove-hook 'pre-command-hook #'evil-god-toggle--fix-last-command t)
+      (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t)
+      (remove-hook 'post-command-hook #'evil-god-toggle--exit-off-once t))))
 
 (defun evil-god-toggle--add-fix-last ()
   "Add `evil-god-toggle--fix-last-command` to `pre-command-hook`."
@@ -422,20 +435,20 @@ it it respects `evil-god-toggle-persist-visual'"
   (add-hook 'pre-command-hook #'evil-god-toggle--fix-last-command nil t))
 
 (defun evil-god-toggle--add-exit-once ()
-  "Add `evil-god-toggle--exit-once` to `post-command-hook`."
+  "Add `evil-god-toggle--exit-once' to buffer-local `post-command-hook'.
+Also sets `evil-god-toggle--exit-once-pending' so the hook's first
+firing (for the command that triggered god-once entry) skips the exit
+and consumes the flag; the next command actually exits."
+  (setq evil-god-toggle--exit-once-pending t)
   (add-hook 'post-command-hook #'evil-god-toggle--exit-once nil t))
 
-(defun evil-god-toggle--add-add-exit-once ()
-  "Add hook that adds `evil-god-toggle--exit-once` to `post-command-hook`."
-  (add-hook 'post-command-hook #'evil-god-toggle--add-exit-once nil t))
-
 (defun evil-god-toggle--add-exit-off-once ()
-  "Add `evil-god-toggle--exit-off-once` to `post-command-hook`."
+  "Add `evil-god-toggle--exit-off-once' to buffer-local `post-command-hook'.
+Also sets `evil-god-toggle--exit-off-once-pending' so the hook's first
+firing (for the command that triggered god-off-once entry) skips the
+exit and consumes the flag; the next command actually exits."
+  (setq evil-god-toggle--exit-off-once-pending t)
   (add-hook 'post-command-hook #'evil-god-toggle--exit-off-once nil t))
-
-(defun evil-god-toggle--add-add-exit-off-once ()
-  "Add hook that adds `evil-god-toggle--exit-off-once` to `post-command-hook`."
-  (add-hook 'post-command-hook #'evil-god-toggle--add-exit-off-once nil t))
 
 (defun evil-god-toggle--check-and-update-previous-state-visual ()
   "Set the previous Evil state to `normal' if it was `god' or `god-once' upon entering `visual'.
@@ -469,41 +482,21 @@ so that exiting visual returns to normal instead of a god state."
   (setq last-repeatable-command evil-god-toggle--last-command)
   (remove-hook 'pre-command-hook #'evil-god-toggle--fix-last-command t))
 
-(defun evil-god-toggle--switch-state-maybe-restore-region-once (next-state-fn)
+(defun evil-god-toggle--switch-state-maybe-restore-region (next-state-fn &optional once)
   "Switch to NEXT-STATE-FN and optionally restore region if in visual mode.
 Skip restoration if in visual block mode since block selections have
-different semantics.  Note that this is for going to god."
-  (let* ((persist-setting (if (eq evil-god-toggle-persist-visual-once 'follow)
-                              evil-god-toggle-persist-visual
-                            evil-god-toggle-persist-visual-once)))
+different semantics.  ONCE selects which persist-visual variable to
+consult; see `--effective-persist-visual'."
+  (let ((persist (evil-god-toggle--effective-persist-visual once)))
     (if (and (evil-visual-state-p)
-             (not (eq evil-visual-selection 'block))  ; Skip for visual block
-             (memq persist-setting '(always to-god)))
-	(let ((mrk (mark))
+             (not (eq evil-visual-selection 'block))
+             (memq persist '(always to-god)))
+        (let ((mrk (mark))
               (pnt (point)))
           (funcall next-state-fn)
           (set-mark mrk)
           (goto-char pnt))
-      (funcall next-state-fn))
-    )
-  )
-
-
-(defun evil-god-toggle--switch-state-maybe-restore-region (next-state-fn)
-  "Switch to NEXT-STATE-FN and optionally restore region if in visual mode.
-Skip restoration if in visual block mode since block selections have
-different semantics."
-
-  (if (and (evil-visual-state-p)
-           (not (eq evil-visual-selection 'block))  ; Skip for visual block
-           (memq evil-god-toggle-persist-visual '(always to-god)))
-      (let ((mrk (mark))
-            (pnt (point)))
-        (funcall next-state-fn)
-        (set-mark mrk)
-        (goto-char pnt))
-    (funcall next-state-fn))
-  )
+      (funcall next-state-fn))))
 
 (defun evil-god-toggle--remove-visual-hooks ()
   "Remove Evil's visual activate/deactivate hooks in current buffer."
@@ -532,38 +525,38 @@ Restores visual selection behavior by adding `evil-visual-activate-hook' to
   (evil-insert-state))
 
 (defun evil-god-toggle--transition-to-visual ()
-  "Enter Evil visual (charwise), restoring any stashed region & orientation."
-(if (bound-and-true-p rectangle-mark-mode)
-      (progn
-        (setq evil-god-toggle--visual-beg nil
-         evil-god-toggle--visual-end nil
-         evil-god-toggle--visual-forward nil)
-        (deactivate-mark)
-        (run-with-idle-timer
-         0 nil
-         (lambda ()
-        (evil-normal-state)))
-
-        ))
-  (when (region-active-p)
-    (deactivate-mark))
-  (if (and evil-god-toggle--visual-beg
-           evil-god-toggle--visual-end)
-      (progn
-        (evil-visual-state)
-        (evil-visual-select
-         evil-god-toggle--visual-beg
-         evil-god-toggle--visual-end
-         'char)
-        ;; swap point and mark if original was backward
-        (unless evil-god-toggle--visual-forward
-          (evil-exchange-point-and-mark))
-        ;; clear the stash
-        (setq evil-god-toggle--visual-beg nil
-              evil-god-toggle--visual-end nil
-              evil-god-toggle--visual-forward nil))
-    ;; fallback: exactly like pressing v in normal
-    (evil-visual-char)))
+  "Enter Evil visual (charwise), restoring any stashed region & orientation.
+In `rectangle-mark-mode', skip visual restoration entirely: clear the
+stash, deactivate the mark, and schedule a transition to normal state.
+Rectangle selections have different semantics from Evil's charwise
+visual, so trying to restore one as the other produces wrong results."
+  (cond
+   ((bound-and-true-p rectangle-mark-mode)
+    (setq evil-god-toggle--visual-beg nil
+          evil-god-toggle--visual-end nil
+          evil-god-toggle--visual-forward nil)
+    (deactivate-mark)
+    (run-at-time 0 nil #'evil-normal-state))
+   (t
+    (when (region-active-p)
+      (deactivate-mark))
+    (if (and evil-god-toggle--visual-beg
+             evil-god-toggle--visual-end)
+        (progn
+          (evil-visual-state)
+          (evil-visual-select
+           evil-god-toggle--visual-beg
+           evil-god-toggle--visual-end
+           'char)
+          ;; swap point and mark if original was backward
+          (unless evil-god-toggle--visual-forward
+            (evil-exchange-point-and-mark))
+          ;; clear the stash
+          (setq evil-god-toggle--visual-beg nil
+                evil-god-toggle--visual-end nil
+                evil-god-toggle--visual-forward nil))
+      ;; fallback: exactly like pressing v in normal
+      (evil-visual-char)))))
 
 (defun evil-god-toggle--determine-target-state (previous-state)
   "Determine target state based on PREVIOUS-STATE and user configuration.
@@ -573,41 +566,46 @@ return its mapped value; otherwise return PREVIOUS-STATE itself."
       previous-state))
 
 (defun evil-god-toggle--exit-once ()
-  "Exit `god-once` state, return to previous Evil state, or `normal' if ambiguous."
-  (if (not (eq evil-state 'god-once))
-      (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t)
-    ;; Only exit if we're not building a prefix command
-    (when (and (not (minibufferp))
-               (not (memq this-command '(evil-god-toggle-once evil-god-once-state)))
-               ;; This is the key: no prefix is being built
-               (not prefix-arg))
-      ;; Defer the state transition
-      (run-with-idle-timer
-       0 nil
-       (lambda ()
-         (let ((target-state (evil-god-toggle--determine-target-state evil-previous-state)))
-           (when (memq target-state '(god god-once god-off nil))
-             (setq target-state 'normal))
-           (evil-god-toggle-stop-god-state-maybe-visual-once target-state)
-           (evil-normalize-keymaps)))))))
-
-
+  "Exit `god-once', return to previous Evil state, or `normal' if ambiguous.
+Skips the first firing after entry via `evil-god-toggle--exit-once-pending',
+so the command that triggered entry does not immediately exit god-once.
+Also skips when building a prefix argument."
+  (cond
+   ((not (eq evil-state 'god-once))
+    (remove-hook 'post-command-hook #'evil-god-toggle--exit-once t))
+   (evil-god-toggle--exit-once-pending
+    (setq evil-god-toggle--exit-once-pending nil))
+   ((and (not (minibufferp))
+         (not prefix-arg))
+    (run-at-time
+     0 nil
+     (lambda ()
+       (let ((target-state (evil-god-toggle--determine-target-state evil-previous-state)))
+         (when (memq target-state '(god god-once god-off nil))
+           (setq target-state 'normal))
+         (evil-god-toggle-stop-god-state-maybe-visual-once target-state)
+         (evil-normalize-keymaps)))))))
 
 (defun evil-god-toggle--exit-off-once ()
-  "Exit `god-off-once' state, return to previous Evil state, or `normal' if ambiguous."
-  (if (not (eq evil-state 'god-off-once))
-      (remove-hook 'post-command-hook #'evil-god-toggle--exit-off-once t)
-    (when (and (not (minibufferp))
-               (not (memq this-command '(evil-god-toggle-off-once evil-god-off-once-state)))
-               (not prefix-arg))
-      (run-with-idle-timer
-       0 nil
-       (lambda ()
-         (let ((target-state (evil-god-toggle--determine-target-state evil-previous-state)))
-           (when (memq target-state '(god god-once god-off god-off-once nil))
-             (setq target-state 'normal))
-           (evil-god-toggle-stop-execute-in-god-state target-state)
-           (evil-normalize-keymaps)))))))
+  "Exit `god-off-once', return to previous Evil state, or `normal' if ambiguous.
+Skips the first firing after entry via
+`evil-god-toggle--exit-off-once-pending'.  Also skips when building a
+prefix argument."
+  (cond
+   ((not (eq evil-state 'god-off-once))
+    (remove-hook 'post-command-hook #'evil-god-toggle--exit-off-once t))
+   (evil-god-toggle--exit-off-once-pending
+    (setq evil-god-toggle--exit-off-once-pending nil))
+   ((and (not (minibufferp))
+         (not prefix-arg))
+    (run-at-time
+     0 nil
+     (lambda ()
+       (let ((target-state (evil-god-toggle--determine-target-state evil-previous-state)))
+         (when (memq target-state '(god god-once god-off god-off-once nil))
+           (setq target-state 'normal))
+         (evil-god-toggle-stop-execute-in-god-state target-state)
+         (evil-normalize-keymaps)))))))
 
 
 (provide 'evil-god-toggle)
